@@ -449,9 +449,7 @@ export async function runFullAnalysis(
     });
 
     // Keep generated .gitnexus contents ignored without editing the user's root .gitignore.
-    if (hasGitDir(repoPath)) {
-      await ensureGitNexusIgnored(repoPath);
-    }
+    await ensureGitNexusIgnored(repoPath);
 
     // ── Generate AI context files (best-effort) ───────────────────────
     let aggregatedClusterCount = 0;
