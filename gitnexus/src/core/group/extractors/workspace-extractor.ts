@@ -5,6 +5,7 @@ import { extractNodeWorkspaceLinks } from './node-workspace-extractor.js';
 import { extractPythonWorkspaceLinks } from './python-workspace-extractor.js';
 import { extractGoWorkspaceLinks } from './go-workspace-extractor.js';
 import { extractJavaWorkspaceLinks } from './java-workspace-extractor.js';
+import { extractElixirWorkspaceLinks } from './elixir-workspace-extractor.js';
 
 export interface WorkspaceDiscoveryResult {
   links: GroupManifestLink[];
@@ -72,6 +73,16 @@ export async function discoverWorkspaceLinks(
       ecosystem: 'Java',
       linkCount: javaResult.links.length,
       projectCount: javaResult.discoveredProjects.size,
+    });
+  }
+
+  const elixirResult = await extractElixirWorkspaceLinks(repos, repoPaths, dbExecutors);
+  if (elixirResult.links.length > 0) {
+    links.push(...elixirResult.links);
+    stats.push({
+      ecosystem: 'Elixir',
+      linkCount: elixirResult.links.length,
+      projectCount: elixirResult.discoveredApps.size,
     });
   }
 
