@@ -10,6 +10,7 @@ import { TopicExtractor } from './extractors/topic-extractor.js';
 import { ManifestExtractor } from './extractors/manifest-extractor.js';
 import { extractRustWorkspaceLinks } from './extractors/rust-workspace-extractor.js';
 import { extractNodeWorkspaceLinks } from './extractors/node-workspace-extractor.js';
+import { extractPythonWorkspaceLinks } from './extractors/python-workspace-extractor.js';
 import { runExactMatch } from './matching.js';
 import { detectServiceBoundaries, assignService } from './service-boundary-detector.js';
 import type { CypherExecutor } from './contract-extractor.js';
@@ -210,6 +211,16 @@ export async function syncGroup(config: GroupConfig, opts?: SyncOptions): Promis
       if (opts?.verbose) {
         console.log(
           `  workspace-deps: discovered ${nodeResult.links.length} cross-package links from ${nodeResult.discoveredPackages.size} Node packages`,
+        );
+      }
+    }
+
+    const pyResult = await extractPythonWorkspaceLinks(config.repos, repoPaths, dbExecutors);
+    if (pyResult.links.length > 0) {
+      allLinks = [...allLinks, ...pyResult.links];
+      if (opts?.verbose) {
+        console.log(
+          `  workspace-deps: discovered ${pyResult.links.length} cross-package links from ${pyResult.discoveredPackages.size} Python packages`,
         );
       }
     }
