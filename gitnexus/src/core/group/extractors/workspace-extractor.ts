@@ -4,6 +4,7 @@ import { extractRustWorkspaceLinks } from './rust-workspace-extractor.js';
 import { extractNodeWorkspaceLinks } from './node-workspace-extractor.js';
 import { extractPythonWorkspaceLinks } from './python-workspace-extractor.js';
 import { extractGoWorkspaceLinks } from './go-workspace-extractor.js';
+import { extractJavaWorkspaceLinks } from './java-workspace-extractor.js';
 
 export interface WorkspaceDiscoveryResult {
   links: GroupManifestLink[];
@@ -61,6 +62,16 @@ export async function discoverWorkspaceLinks(
       ecosystem: 'Go',
       linkCount: goResult.links.length,
       projectCount: goResult.discoveredModules.size,
+    });
+  }
+
+  const javaResult = await extractJavaWorkspaceLinks(repos, repoPaths, dbExecutors);
+  if (javaResult.links.length > 0) {
+    links.push(...javaResult.links);
+    stats.push({
+      ecosystem: 'Java',
+      linkCount: javaResult.links.length,
+      projectCount: javaResult.discoveredProjects.size,
     });
   }
 
