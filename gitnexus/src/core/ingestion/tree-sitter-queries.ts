@@ -1373,6 +1373,23 @@ export const DART_QUERIES = `
       (type_identifier) @heritage.trait))) @heritage
 `;
 
+export const BASH_QUERIES = `
+; Functions: function foo() {} or foo() {}
+(function_definition name: (word) @name) @definition.function
+
+; Source imports: source file.sh or . file.sh
+(command
+  name: (command_name) @_cmd
+  argument: (_) @import.source
+  (#match? @_cmd "^(source|\\\\.)$")) @import
+
+; Command calls: foo args...
+(command name: (command_name (word) @call.name)) @call
+
+; Variable assignments: FOO=bar
+(variable_assignment name: (variable_name) @name) @definition.variable
+`;
+
 import { SupportedLanguages } from 'gitnexus-shared';
 
 export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
@@ -1390,6 +1407,7 @@ export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
   [SupportedLanguages.Ruby]: RUBY_QUERIES,
   [SupportedLanguages.Swift]: SWIFT_QUERIES,
   [SupportedLanguages.Dart]: DART_QUERIES,
+  [SupportedLanguages.Bash]: BASH_QUERIES,
   [SupportedLanguages.Vue]: TYPESCRIPT_QUERIES, // Vue <script> blocks are parsed as TypeScript
   [SupportedLanguages.Cobol]: '', // Standalone regex processor — no tree-sitter queries
 };
