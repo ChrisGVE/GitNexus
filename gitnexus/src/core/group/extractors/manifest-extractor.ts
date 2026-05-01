@@ -268,6 +268,20 @@ export class ManifestExtractor {
            LIMIT 1`,
           { contract: link.contract },
         );
+      } else if (link.type === 'custom') {
+        // Exact name match on code symbols (Struct, Enum, Trait, Function,
+        // Class, Interface, Method). Excludes File/Folder/Community/Process
+        // to avoid false positives from non-symbol nodes that happen to
+        // share the name. Useful for Rust cross-crate types and other
+        // language-agnostic cross-repo contracts.
+        rows = await executor(
+          `MATCH (n) WHERE n.name = $contract
+           AND NOT n:File AND NOT n:Folder AND NOT n:Community AND NOT n:Process
+           RETURN n.id AS uid, n.name AS name, n.filePath AS filePath
+           ORDER BY n.filePath ASC
+           LIMIT 1`,
+          { contract: link.contract },
+        );
       } else {
         return null;
       }
