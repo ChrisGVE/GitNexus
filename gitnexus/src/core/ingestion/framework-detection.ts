@@ -895,6 +895,7 @@ export const AST_FRAMEWORK_PATTERNS_BY_LANGUAGE = {
       patterns: FRAMEWORK_AST_PATTERNS.riverpod,
     },
   ],
+  [SupportedLanguages.Scala]: [],
   [SupportedLanguages.Vue]: [], // Vue uses TypeScript AST framework detection
   [SupportedLanguages.Cobol]: [], // Standalone regex processor — no AST framework patterns
 } satisfies Record<SupportedLanguages, AstFrameworkPatternConfig[]>;
