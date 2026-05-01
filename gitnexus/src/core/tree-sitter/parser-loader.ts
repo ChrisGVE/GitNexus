@@ -153,6 +153,11 @@ const SOURCES: Record<string, GrammarSource> = {
       'Likely cause: native compile failed at install (missing python3/make/g++). ' +
       `See ${ISSUES_URL}/1125.`,
   },
+  [SupportedLanguages.Bash]: {
+    load: () => _require('tree-sitter-bash'),
+    unavailableNote:
+      'Bash parsing requires `tree-sitter-bash`. Check the install and native binding.',
+  },
   [SupportedLanguages.Kotlin]: {
     load: () => _require('tree-sitter-kotlin'),
     optional: true,
