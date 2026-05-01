@@ -2,6 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { CypherExecutor } from '../contract-extractor.js';
 import type { GroupManifestLink, ContractRole } from '../types.js';
+import { shouldIgnorePath } from '../../../config/ignore-service.js';
+import { loadIgnoreRules } from '../../../config/ignore-service.js';
 
 /**
  * Discover cross-crate contracts in a Rust workspace by reading each
@@ -58,7 +60,7 @@ async function parseCrateManifest(
   // Also match plain path dependencies:
   //   dep_name = { path = "../other" }
   const depSections = content.matchAll(
-    /^\[(dependencies|dev-dependencies|build-dependencies)\]\s*\n([\s\S]*?)(?=^\[|$)/gm,
+    /\[(dependencies|dev-dependencies|build-dependencies)\]\s*\n([\s\S]*?)(?=\n\[|$)/g,
   );
 
   for (const section of depSections) {
@@ -94,6 +96,11 @@ async function scanImports(
 ): Promise<ImportedSymbol[]> {
   const results: ImportedSymbol[] = [];
 
+  const normalizedCrates = new Map<string, string>();
+  for (const c of knownCrates) {
+    normalizedCrates.set(c.replace(/-/g, '_'), c);
+  }
+
   const sourceFiles = await findRustFiles(repoPath);
   for (const relFile of sourceFiles) {
     const absPath = path.join(repoPath, relFile);
@@ -102,13 +109,6 @@ async function scanImports(
       content = await fs.readFile(absPath, 'utf-8');
     } catch {
       continue;
-    }
-
-    // Rust crate names in Cargo.toml use hyphens, but `use` statements
-    // use underscores. Normalize for matching.
-    const normalizedCrates = new Map<string, string>();
-    for (const c of knownCrates) {
-      normalizedCrates.set(c.replace(/-/g, '_'), c);
     }
 
     // Match patterns:
@@ -166,14 +166,7 @@ function isTypeName(name: string): boolean {
 
 async function findRustFiles(repoPath: string): Promise<string[]> {
   const results: string[] = [];
-  const IGNORE = new Set([
-    'target',
-    'node_modules',
-    '.git',
-    '.gitnexus',
-    'vendor',
-    'benches',
-  ]);
+  const ig = await loadIgnoreRules(repoPath);
 
   async function walk(dir: string, rel: string): Promise<void> {
     let entries;
@@ -183,11 +176,14 @@ async function findRustFiles(repoPath: string): Promise<string[]> {
       return;
     }
     for (const entry of entries) {
-      if (IGNORE.has(entry.name)) continue;
       const childRel = rel ? `${rel}/${entry.name}` : entry.name;
       if (entry.isDirectory()) {
+        if (shouldIgnorePath(childRel)) continue;
+        if (ig && ig.ignores(childRel + '/')) continue;
         await walk(path.join(dir, entry.name), childRel);
       } else if (entry.name.endsWith('.rs')) {
+        if (shouldIgnorePath(childRel)) continue;
+        if (ig && ig.ignores(childRel)) continue;
         results.push(childRel);
       }
     }
@@ -229,6 +225,13 @@ export async function extractRustWorkspaceLinks(
       repoPath,
       workspaceDeps: manifest.workspaceDeps,
     };
+    const existing = cratesByName.get(manifest.name);
+    if (existing) {
+      console.warn(
+        `[rust-workspace-extractor] duplicate crate name "${manifest.name}" in "${groupPath}" and "${existing.groupPath}" — skipping "${groupPath}"`,
+      );
+      continue;
+    }
     cratesByName.set(manifest.name, meta);
     cratesByGroupPath.set(groupPath, meta);
   }
@@ -250,16 +253,16 @@ export async function extractRustWorkspaceLinks(
       const providerCrate = cratesByName.get(imp.crateName);
       if (!providerCrate) continue;
 
-      const key = `${crate.groupPath}→${providerCrate.groupPath}::${imp.symbolName}`;
+      const qualifiedContract = `${imp.crateName}::${imp.symbolName}`;
+      const key = `${crate.groupPath}→${providerCrate.groupPath}::${qualifiedContract}`;
       if (seen.has(key)) continue;
       seen.add(key);
 
-      // Consumer imports from provider
       const link: GroupManifestLink = {
         from: providerCrate.groupPath,
         to: crate.groupPath,
         type: 'custom',
-        contract: imp.symbolName,
+        contract: qualifiedContract,
         role: 'provider' as ContractRole,
       };
       links.push(link);

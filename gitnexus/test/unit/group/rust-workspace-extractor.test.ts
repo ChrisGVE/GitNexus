@@ -52,7 +52,7 @@ describe('RustWorkspaceExtractor', () => {
       from: 'parser/mathlex',
       to: 'engine/thales',
       type: 'custom',
-      contract: 'Expression',
+      contract: 'mathlex::Expression',
       role: 'provider',
     });
   });
@@ -86,7 +86,7 @@ describe('RustWorkspaceExtractor', () => {
 
     expect(result.links).toHaveLength(2);
     const contracts = result.links.map((l) => l.contract).sort();
-    expect(contracts).toEqual(['Dimension', 'Unit']);
+    expect(contracts).toEqual(['mathcore-units::Dimension', 'mathcore-units::Unit']);
   });
 
   it('handles grouped imports (use crate::{Type1, Type2})', async () => {
@@ -112,7 +112,7 @@ describe('RustWorkspaceExtractor', () => {
 
     expect(result.links).toHaveLength(2);
     const contracts = result.links.map((l) => l.contract).sort();
-    expect(contracts).toEqual(['Bar', 'Foo']);
+    expect(contracts).toEqual(['shared::Bar', 'shared::Foo']);
   });
 
   it('ignores snake_case imports (functions/modules, not types)', async () => {
@@ -137,7 +137,7 @@ describe('RustWorkspaceExtractor', () => {
     const result = await extractRustWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Config');
+    expect(result.links[0].contract).toBe('utils::Config');
   });
 
   it('skips repos without Cargo.toml', async () => {
@@ -200,7 +200,115 @@ describe('RustWorkspaceExtractor', () => {
     const result = await extractRustWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Handler');
+    expect(result.links[0].contract).toBe('mylib::Handler');
+  });
+
+  it('warns and skips duplicate crate names', async () => {
+    await writeFile(
+      'repo-a/Cargo.toml',
+      `[package]\nname = "shared"\nversion = "0.1.0"\n\n[dependencies]\n`,
+    );
+    await writeFile('repo-a/src/lib.rs', 'pub struct Alpha {}\n');
+
+    await writeFile(
+      'repo-b/Cargo.toml',
+      `[package]\nname = "shared"\nversion = "0.2.0"\n\n[dependencies]\n`,
+    );
+    await writeFile('repo-b/src/lib.rs', 'pub struct Beta {}\n');
+
+    await writeFile(
+      'consumer/Cargo.toml',
+      `[package]\nname = "consumer"\nversion = "0.1.0"\n\n[dependencies]\nshared = { workspace = true }\n`,
+    );
+    await writeFile('consumer/src/main.rs', 'use shared::Alpha;\n');
+
+    const repos = { a: 'shared-a', b: 'shared-b', consumer: 'consumer' };
+    const repoPaths = new Map([
+      ['a', path.join(tmpDir, 'repo-a')],
+      ['b', path.join(tmpDir, 'repo-b')],
+      ['consumer', path.join(tmpDir, 'consumer')],
+    ]);
+
+    const warnings: string[] = [];
+    const origWarn = console.warn;
+    console.warn = (...args: unknown[]) => { warnings.push(String(args[0])); };
+    const result = await extractRustWorkspaceLinks(repos, repoPaths);
+    console.warn = origWarn;
+
+    expect(warnings.some((w) => w.includes('duplicate crate name "shared"'))).toBe(true);
+    expect(result.links).toHaveLength(1);
+    expect(result.links[0].from).toBe('a');
+  });
+
+  it('produces distinct contracts when two crates export same symbol name', async () => {
+    await writeFile(
+      'lib-a/Cargo.toml',
+      `[package]\nname = "alpha"\nversion = "0.1.0"\n\n[dependencies]\n`,
+    );
+    await writeFile('lib-a/src/lib.rs', 'pub struct Config {}\n');
+
+    await writeFile(
+      'lib-b/Cargo.toml',
+      `[package]\nname = "beta"\nversion = "0.1.0"\n\n[dependencies]\n`,
+    );
+    await writeFile('lib-b/src/lib.rs', 'pub struct Config {}\n');
+
+    await writeFile(
+      'app/Cargo.toml',
+      `[package]\nname = "myapp"\nversion = "0.1.0"\n\n[dependencies]\nalpha = { workspace = true }\nbeta = { workspace = true }\n`,
+    );
+    await writeFile(
+      'app/src/main.rs',
+      'use alpha::Config;\nuse beta::Config;\n',
+    );
+
+    const repos = { alpha: 'alpha', beta: 'beta', app: 'myapp' };
+    const repoPaths = new Map([
+      ['alpha', path.join(tmpDir, 'lib-a')],
+      ['beta', path.join(tmpDir, 'lib-b')],
+      ['app', path.join(tmpDir, 'app')],
+    ]);
+
+    const result = await extractRustWorkspaceLinks(repos, repoPaths);
+
+    expect(result.links).toHaveLength(2);
+    const contracts = result.links.map((l) => l.contract).sort();
+    expect(contracts).toEqual(['alpha::Config', 'beta::Config']);
+  });
+
+  it('respects .gitnexusignore patterns', async () => {
+    await writeFile(
+      'lib/Cargo.toml',
+      `[package]\nname = "mylib"\nversion = "0.1.0"\n\n[dependencies]\n`,
+    );
+    await writeFile('lib/src/lib.rs', 'pub struct Real {}\n');
+    await writeFile('lib/generated/gen.rs', 'pub struct Fake {}\n');
+    await writeFile('lib/.gitnexusignore', 'generated/\n');
+
+    await writeFile(
+      'app/Cargo.toml',
+      `[package]\nname = "myapp"\nversion = "0.1.0"\n\n[dependencies]\nmylib = { workspace = true }\n`,
+    );
+    await writeFile(
+      'app/src/main.rs',
+      'use mylib::Real;\n',
+    );
+    await writeFile(
+      'app/generated/gen.rs',
+      'use mylib::Fake;\n',
+    );
+    await writeFile('app/.gitnexusignore', 'generated/\n');
+
+    const repos = { lib: 'mylib', app: 'myapp' };
+    const repoPaths = new Map([
+      ['lib', path.join(tmpDir, 'lib')],
+      ['app', path.join(tmpDir, 'app')],
+    ]);
+
+    const result = await extractRustWorkspaceLinks(repos, repoPaths);
+
+    expect(result.links).toHaveLength(1);
+    expect(result.links[0].contract).toBe('mylib::Real');
   });
 
   it('handles nested module imports (use crate::module::Type)', async () => {
@@ -226,6 +334,6 @@ describe('RustWorkspaceExtractor', () => {
 
     expect(result.links).toHaveLength(2);
     const contracts = result.links.map((l) => l.contract).sort();
-    expect(contracts).toEqual(['Token', 'User']);
+    expect(contracts).toEqual(['shared::Token', 'shared::User']);
   });
 });
