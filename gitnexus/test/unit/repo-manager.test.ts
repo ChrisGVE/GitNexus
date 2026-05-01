@@ -11,6 +11,7 @@ import fs from 'fs/promises';
 import {
   getStoragePath,
   getStoragePaths,
+  ensureGitNexusInternalGitignore,
   readRegistry,
   loadCLIConfig,
   registerRepo,
@@ -59,6 +60,54 @@ describe('getStoragePaths', () => {
     const paths = getStoragePaths('/home/user/project');
     expect(paths.lbugPath.startsWith(paths.storagePath)).toBe(true);
     expect(paths.metaPath.startsWith(paths.storagePath)).toBe(true);
+  });
+});
+
+// ─── Internal .gitnexus/.gitignore (#1233) ─────────────────────────────
+
+describe('ensureGitNexusInternalGitignore (#1233)', () => {
+  let tmpRepo: Awaited<ReturnType<typeof createTempDir>>;
+
+  beforeEach(async () => {
+    tmpRepo = await createTempDir('gitnexus-internal-gitignore-');
+  });
+
+  afterEach(async () => {
+    await tmpRepo.cleanup();
+  });
+
+  it('creates .gitnexus/.gitignore containing a catch-all ignore rule', async () => {
+    await ensureGitNexusInternalGitignore(tmpRepo.dbPath);
+
+    await expect(
+      fs.readFile(path.join(tmpRepo.dbPath, '.gitnexus', '.gitignore'), 'utf-8'),
+    ).resolves.toBe('*\n');
+  });
+
+  it('does not create or modify the repository root .gitignore', async () => {
+    const rootGitignorePath = path.join(tmpRepo.dbPath, '.gitignore');
+    await fs.writeFile(rootGitignorePath, 'node_modules/\n');
+
+    await ensureGitNexusInternalGitignore(tmpRepo.dbPath);
+
+    await expect(fs.readFile(rootGitignorePath, 'utf-8')).resolves.toBe('node_modules/\n');
+  });
+
+  it('keeps generated .gitnexus files out of git status', async () => {
+    execSync('git init', { cwd: tmpRepo.dbPath, stdio: 'pipe' });
+    execSync('git -c user.name=test -c user.email=test@test commit --allow-empty -m init', {
+      cwd: tmpRepo.dbPath,
+      stdio: 'pipe',
+    });
+
+    await ensureGitNexusInternalGitignore(tmpRepo.dbPath);
+    await fs.writeFile(path.join(tmpRepo.dbPath, '.gitnexus', 'meta.json'), '{}\n');
+
+    const status = execSync('git status --short', {
+      cwd: tmpRepo.dbPath,
+      encoding: 'utf-8',
+    });
+    expect(status).toBe('');
   });
 });
 

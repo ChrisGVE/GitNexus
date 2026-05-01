@@ -238,23 +238,13 @@ export const findRepo = async (startPath: string): Promise<IndexedRepo | null> =
 };
 
 /**
- * Add .gitnexus to .gitignore if not already present
+ * Keep generated index files ignored without modifying the user's root .gitignore.
  */
-export const addToGitignore = async (repoPath: string): Promise<void> => {
-  const gitignorePath = path.join(repoPath, '.gitignore');
+export const ensureGitNexusInternalGitignore = async (repoPath: string): Promise<void> => {
+  const gitignorePath = path.join(getStoragePath(repoPath), '.gitignore');
 
-  try {
-    const content = await fs.readFile(gitignorePath, 'utf-8');
-    if (content.includes(GITNEXUS_DIR)) return;
-
-    const newContent = content.endsWith('\n')
-      ? `${content}${GITNEXUS_DIR}\n`
-      : `${content}\n${GITNEXUS_DIR}\n`;
-    await fs.writeFile(gitignorePath, newContent, 'utf-8');
-  } catch {
-    // .gitignore doesn't exist, create it
-    await fs.writeFile(gitignorePath, `${GITNEXUS_DIR}\n`, 'utf-8');
-  }
+  await fs.mkdir(path.dirname(gitignorePath), { recursive: true });
+  await fs.writeFile(gitignorePath, '*\n', 'utf-8');
 };
 
 // ─── Global Registry (~/.gitnexus/registry.json) ───────────────────────

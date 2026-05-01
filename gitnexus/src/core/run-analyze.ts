@@ -26,7 +26,7 @@ import {
   getStoragePaths,
   saveMeta,
   loadMeta,
-  addToGitignore,
+  ensureGitNexusInternalGitignore,
   registerRepo,
   cleanupOldKuzuFiles,
 } from '../storage/repo-manager.js';
@@ -166,6 +166,7 @@ export async function runFullAnalysis(
   if (existingMeta && !options.force && existingMeta.lastCommit === currentCommit) {
     // Non-git folders have currentCommit = '' — always rebuild since we can't detect changes
     if (currentCommit !== '') {
+      await ensureGitNexusInternalGitignore(repoPath);
       return {
         repoName: options.registryName ?? getInferredRepoName(repoPath) ?? path.basename(repoPath),
         repoPath,
@@ -447,9 +448,9 @@ export async function runFullAnalysis(
       allowDuplicateName: options.allowDuplicateName,
     });
 
-    // Only attempt to update .gitignore when a .git directory is present.
+    // Keep generated .gitnexus contents ignored without editing the user's root .gitignore.
     if (hasGitDir(repoPath)) {
-      await addToGitignore(repoPath);
+      await ensureGitNexusInternalGitignore(repoPath);
     }
 
     // ── Generate AI context files (best-effort) ───────────────────────
