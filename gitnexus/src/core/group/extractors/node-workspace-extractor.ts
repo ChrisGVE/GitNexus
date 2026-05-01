@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { CypherExecutor } from '../contract-extractor.js';
 import type { GroupManifestLink, ContractRole } from '../types.js';
+import { shouldIgnorePath, loadIgnoreRules } from '../../../config/ignore-service.js';
 
 interface PackageMeta {
   name: string;
@@ -148,18 +149,8 @@ function isExportedName(name: string): boolean {
 
 async function findSourceFiles(repoPath: string): Promise<string[]> {
   const results: string[] = [];
-  const IGNORE = new Set([
-    'node_modules',
-    '.git',
-    '.gitnexus',
-    'dist',
-    'build',
-    'coverage',
-    '.next',
-    '.nuxt',
-    'vendor',
-  ]);
   const EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.mts', '.cts']);
+  const ig = await loadIgnoreRules(repoPath);
 
   async function walk(dir: string, rel: string): Promise<void> {
     let entries;
@@ -169,13 +160,16 @@ async function findSourceFiles(repoPath: string): Promise<string[]> {
       return;
     }
     for (const entry of entries) {
-      if (IGNORE.has(entry.name)) continue;
       const childRel = rel ? `${rel}/${entry.name}` : entry.name;
       if (entry.isDirectory()) {
+        if (shouldIgnorePath(childRel)) continue;
+        if (ig && ig.ignores(childRel + '/')) continue;
         await walk(path.join(dir, entry.name), childRel);
       } else {
         const ext = path.extname(entry.name);
         if (EXTENSIONS.has(ext)) {
+          if (shouldIgnorePath(childRel)) continue;
+          if (ig && ig.ignores(childRel)) continue;
           results.push(childRel);
         }
       }
@@ -212,6 +206,13 @@ export async function extractNodeWorkspaceLinks(
       repoPath,
       workspaceDeps: manifest.workspaceDeps,
     };
+    const existing = packagesByName.get(manifest.name);
+    if (existing) {
+      console.warn(
+        `[node-workspace-extractor] duplicate package name "${manifest.name}" in "${groupPath}" and "${existing.groupPath}" — skipping "${groupPath}"`,
+      );
+      continue;
+    }
     packagesByName.set(manifest.name, meta);
     packagesByGroupPath.set(groupPath, meta);
   }
@@ -230,7 +231,8 @@ export async function extractNodeWorkspaceLinks(
       const providerPkg = packagesByName.get(imp.packageName);
       if (!providerPkg) continue;
 
-      const key = `${pkg.groupPath}→${providerPkg.groupPath}::${imp.symbolName}`;
+      const qualifiedContract = `${imp.packageName}::${imp.symbolName}`;
+      const key = `${pkg.groupPath}→${providerPkg.groupPath}::${qualifiedContract}`;
       if (seen.has(key)) continue;
       seen.add(key);
 
@@ -238,7 +240,7 @@ export async function extractNodeWorkspaceLinks(
         from: providerPkg.groupPath,
         to: pkg.groupPath,
         type: 'custom',
-        contract: imp.symbolName,
+        contract: qualifiedContract,
         role: 'provider' as ContractRole,
       };
       links.push(link);

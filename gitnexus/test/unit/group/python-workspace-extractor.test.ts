@@ -50,7 +50,7 @@ describe('PythonWorkspaceExtractor', () => {
       from: 'models',
       to: 'api',
       type: 'custom',
-      contract: 'Schema',
+      contract: 'shared-models::Schema',
       role: 'provider',
     });
   });
@@ -77,7 +77,7 @@ describe('PythonWorkspaceExtractor', () => {
     const result = await extractPythonWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Engine');
+    expect(result.links[0].contract).toBe('mycore::Engine');
   });
 
   it('handles hyphenated package names (normalized to underscore in imports)', async () => {
@@ -102,7 +102,7 @@ describe('PythonWorkspaceExtractor', () => {
     const result = await extractPythonWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Helper');
+    expect(result.links[0].contract).toBe('my-utils::Helper');
   });
 
   it('handles submodule imports (from pkg.sub import Class)', async () => {
@@ -127,7 +127,7 @@ describe('PythonWorkspaceExtractor', () => {
     const result = await extractPythonWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Record');
+    expect(result.links[0].contract).toBe('datalib::Record');
   });
 
   it('ignores snake_case imports (functions, not types)', async () => {
@@ -152,7 +152,7 @@ describe('PythonWorkspaceExtractor', () => {
     const result = await extractPythonWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Config');
+    expect(result.links[0].contract).toBe('utils::Config');
   });
 
   it('skips repos without Python manifest', async () => {
@@ -217,7 +217,7 @@ describe('PythonWorkspaceExtractor', () => {
     const result = await extractPythonWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Entity');
+    expect(result.links[0].contract).toBe('models::Entity');
   });
 
   it('reads optional-dependencies from pyproject.toml', async () => {
@@ -242,6 +242,6 @@ describe('PythonWorkspaceExtractor', () => {
     const result = await extractPythonWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Plugin');
+    expect(result.links[0].contract).toBe('extras::Plugin');
   });
 });

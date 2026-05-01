@@ -60,7 +60,7 @@ describe('JavaWorkspaceExtractor', () => {
       from: 'models',
       to: 'api',
       type: 'custom',
-      contract: 'User',
+      contract: 'models::User',
       role: 'provider',
     });
   });
@@ -93,7 +93,7 @@ describe('JavaWorkspaceExtractor', () => {
     const result = await extractJavaWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Config');
+    expect(result.links[0].contract).toBe('core::Config');
   });
 
   it('handles Gradle project dependencies', async () => {
@@ -124,7 +124,7 @@ describe('JavaWorkspaceExtractor', () => {
     const result = await extractJavaWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Entity');
+    expect(result.links[0].contract).toBe('common::Entity');
   });
 
   it('handles static imports', async () => {
@@ -152,7 +152,7 @@ describe('JavaWorkspaceExtractor', () => {
     const result = await extractJavaWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Constants');
+    expect(result.links[0].contract).toBe('lib::Constants');
   });
 
   it('skips repos without Java manifest', async () => {
@@ -223,7 +223,7 @@ describe('JavaWorkspaceExtractor', () => {
     const result = await extractJavaWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Model');
+    expect(result.links[0].contract).toBe('lib::Model');
   });
 
   it('discovers multiple types from the same dependency', async () => {
@@ -256,6 +256,6 @@ describe('JavaWorkspaceExtractor', () => {
 
     expect(result.links).toHaveLength(2);
     const contracts = result.links.map((l) => l.contract).sort();
-    expect(contracts).toEqual(['Request', 'Response']);
+    expect(contracts).toEqual(['lib::Request', 'lib::Response']);
   });
 });

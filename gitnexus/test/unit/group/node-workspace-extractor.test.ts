@@ -57,7 +57,7 @@ describe('NodeWorkspaceExtractor', () => {
       from: 'libs/shared',
       to: 'services/api',
       type: 'custom',
-      contract: 'Config',
+      contract: '@myorg/shared::Config',
       role: 'provider',
     });
   });
@@ -91,7 +91,7 @@ describe('NodeWorkspaceExtractor', () => {
     const result = await extractNodeWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Button');
+    expect(result.links[0].contract).toBe('ui-components::Button');
   });
 
   it('handles CommonJS destructured require', async () => {
@@ -123,7 +123,7 @@ describe('NodeWorkspaceExtractor', () => {
     const result = await extractNodeWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Authenticator');
+    expect(result.links[0].contract).toBe('auth-lib::Authenticator');
   });
 
   it('handles scoped package imports with subpaths', async () => {
@@ -155,7 +155,7 @@ describe('NodeWorkspaceExtractor', () => {
     const result = await extractNodeWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('User');
+    expect(result.links[0].contract).toBe('@acme/core::User');
   });
 
   it('ignores camelCase/snake_case imports (non-type exports)', async () => {
@@ -187,7 +187,7 @@ describe('NodeWorkspaceExtractor', () => {
     const result = await extractNodeWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Formatter');
+    expect(result.links[0].contract).toBe('utils::Formatter');
   });
 
   it('skips repos without package.json', async () => {
@@ -261,7 +261,7 @@ describe('NodeWorkspaceExtractor', () => {
     const result = await extractNodeWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Entity');
+    expect(result.links[0].contract).toBe('models::Entity');
   });
 
   it('handles multiple packages importing from the same provider', async () => {
@@ -307,6 +307,6 @@ describe('NodeWorkspaceExtractor', () => {
     expect(result.links).toHaveLength(2);
     const targets = result.links.map((l) => l.to).sort();
     expect(targets).toEqual(['api', 'worker']);
-    expect(result.links.every((l) => l.contract === 'Schema')).toBe(true);
+    expect(result.links.every((l) => l.contract === '@org/shared::Schema')).toBe(true);
   });
 });

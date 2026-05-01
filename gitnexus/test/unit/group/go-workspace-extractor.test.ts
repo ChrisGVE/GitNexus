@@ -56,7 +56,7 @@ describe('GoWorkspaceExtractor', () => {
       from: 'libs/models',
       to: 'services/api',
       type: 'custom',
-      contract: 'Schema',
+      contract: 'models::Schema',
       role: 'provider',
     });
   });
@@ -86,7 +86,7 @@ describe('GoWorkspaceExtractor', () => {
     const result = await extractGoWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Token');
+    expect(result.links[0].contract).toBe('auth::Token');
   });
 
   it('handles subpackage imports (module/pkg)', async () => {
@@ -117,7 +117,7 @@ describe('GoWorkspaceExtractor', () => {
     const result = await extractGoWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Entity');
+    expect(result.links[0].contract).toBe('core::Entity');
   });
 
   it('handles replace directive with local paths', async () => {
@@ -145,7 +145,7 @@ describe('GoWorkspaceExtractor', () => {
     const result = await extractGoWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Config');
+    expect(result.links[0].contract).toBe('lib::Config');
   });
 
   it('ignores unexported (lowercase) identifiers', async () => {
@@ -176,7 +176,7 @@ describe('GoWorkspaceExtractor', () => {
     const result = await extractGoWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('Config');
+    expect(result.links[0].contract).toBe('lib::Config');
   });
 
   it('skips repos without go.mod', async () => {
@@ -251,6 +251,6 @@ describe('GoWorkspaceExtractor', () => {
 
     expect(result.links).toHaveLength(2);
     const contracts = result.links.map((l) => l.contract).sort();
-    expect(contracts).toEqual(['Request', 'Response']);
+    expect(contracts).toEqual(['lib::Request', 'lib::Response']);
   });
 });

@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { CypherExecutor } from '../contract-extractor.js';
 import type { GroupManifestLink, ContractRole } from '../types.js';
+import { shouldIgnorePath, loadIgnoreRules } from '../../../config/ignore-service.js';
 
 interface JavaProjectMeta {
   groupId: string;
@@ -160,16 +161,7 @@ function isPascalCase(name: string): boolean {
 
 async function findJavaFiles(repoPath: string): Promise<string[]> {
   const results: string[] = [];
-  const IGNORE = new Set([
-    'node_modules',
-    '.git',
-    '.gitnexus',
-    'build',
-    'target',
-    '.gradle',
-    '.idea',
-    'bin',
-  ]);
+  const ig = await loadIgnoreRules(repoPath);
 
   async function walk(dir: string, rel: string): Promise<void> {
     let entries;
@@ -179,11 +171,14 @@ async function findJavaFiles(repoPath: string): Promise<string[]> {
       return;
     }
     for (const entry of entries) {
-      if (IGNORE.has(entry.name)) continue;
       const childRel = rel ? `${rel}/${entry.name}` : entry.name;
       if (entry.isDirectory()) {
+        if (shouldIgnorePath(childRel)) continue;
+        if (ig && ig.ignores(childRel + '/')) continue;
         await walk(path.join(dir, entry.name), childRel);
       } else if (entry.name.endsWith('.java') || entry.name.endsWith('.kt')) {
+        if (shouldIgnorePath(childRel)) continue;
+        if (ig && ig.ignores(childRel)) continue;
         results.push(childRel);
       }
     }
@@ -222,6 +217,13 @@ export async function extractJavaWorkspaceLinks(
       repoPath,
       deps: manifest.deps,
     };
+    const existing = projectsByKey.get(key);
+    if (existing) {
+      console.warn(
+        `[java-workspace-extractor] duplicate artifact "${key}" in "${groupPath}" and "${existing.groupPath}" — skipping "${groupPath}"`,
+      );
+      continue;
+    }
     projectsByKey.set(key, meta);
     projectsByGroupPath.set(groupPath, meta);
   }
@@ -245,15 +247,16 @@ export async function extractJavaWorkspaceLinks(
       const providerProj = projectsByKey.get(imp.artifactKey);
       if (!providerProj) continue;
 
-      const key = `${proj.groupPath}→${providerProj.groupPath}::${imp.symbolName}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
+      const qualifiedContract = `${providerProj.artifactId}::${imp.symbolName}`;
+      const dedupKey = `${proj.groupPath}→${providerProj.groupPath}::${qualifiedContract}`;
+      if (seen.has(dedupKey)) continue;
+      seen.add(dedupKey);
 
       const link: GroupManifestLink = {
         from: providerProj.groupPath,
         to: proj.groupPath,
         type: 'custom',
-        contract: imp.symbolName,
+        contract: qualifiedContract,
         role: 'provider' as ContractRole,
       };
       links.push(link);

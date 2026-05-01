@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { CypherExecutor } from '../contract-extractor.js';
 import type { GroupManifestLink, ContractRole } from '../types.js';
+import { shouldIgnorePath, loadIgnoreRules } from '../../../config/ignore-service.js';
 
 interface PythonPackageMeta {
   name: string;
@@ -152,20 +153,7 @@ function isPascalCase(name: string): boolean {
 
 async function findPythonFiles(repoPath: string): Promise<string[]> {
   const results: string[] = [];
-  const IGNORE = new Set([
-    '__pycache__',
-    '.git',
-    '.gitnexus',
-    'node_modules',
-    '.venv',
-    'venv',
-    '.tox',
-    '.eggs',
-    'dist',
-    'build',
-    '.mypy_cache',
-    '.pytest_cache',
-  ]);
+  const ig = await loadIgnoreRules(repoPath);
 
   async function walk(dir: string, rel: string): Promise<void> {
     let entries;
@@ -175,11 +163,14 @@ async function findPythonFiles(repoPath: string): Promise<string[]> {
       return;
     }
     for (const entry of entries) {
-      if (IGNORE.has(entry.name)) continue;
       const childRel = rel ? `${rel}/${entry.name}` : entry.name;
       if (entry.isDirectory()) {
+        if (shouldIgnorePath(childRel)) continue;
+        if (ig && ig.ignores(childRel + '/')) continue;
         await walk(path.join(dir, entry.name), childRel);
       } else if (entry.name.endsWith('.py')) {
+        if (shouldIgnorePath(childRel)) continue;
+        if (ig && ig.ignores(childRel)) continue;
         results.push(childRel);
       }
     }
@@ -216,6 +207,13 @@ export async function extractPythonWorkspaceLinks(
       repoPath,
       workspaceDeps: manifest.deps,
     };
+    const existing = packagesByImportName.get(manifest.importName);
+    if (existing) {
+      console.warn(
+        `[python-workspace-extractor] duplicate package "${manifest.name}" in "${groupPath}" and "${existing.groupPath}" — skipping "${groupPath}"`,
+      );
+      continue;
+    }
     packagesByImportName.set(manifest.importName, meta);
     packagesByGroupPath.set(groupPath, meta);
   }
@@ -241,7 +239,8 @@ export async function extractPythonWorkspaceLinks(
       const providerPkg = packagesByImportName.get(providerImportName);
       if (!providerPkg) continue;
 
-      const key = `${pkg.groupPath}→${providerPkg.groupPath}::${imp.symbolName}`;
+      const qualifiedContract = `${providerPkg.name}::${imp.symbolName}`;
+      const key = `${pkg.groupPath}→${providerPkg.groupPath}::${qualifiedContract}`;
       if (seen.has(key)) continue;
       seen.add(key);
 
@@ -249,7 +248,7 @@ export async function extractPythonWorkspaceLinks(
         from: providerPkg.groupPath,
         to: pkg.groupPath,
         type: 'custom',
-        contract: imp.symbolName,
+        contract: qualifiedContract,
         role: 'provider' as ContractRole,
       };
       links.push(link);

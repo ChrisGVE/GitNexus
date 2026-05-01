@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { CypherExecutor } from '../contract-extractor.js';
 import type { GroupManifestLink, ContractRole } from '../types.js';
+import { shouldIgnorePath, loadIgnoreRules } from '../../../config/ignore-service.js';
 
 interface ElixirAppMeta {
   appName: string;
@@ -142,15 +143,7 @@ function extractTopModule(moduleName: string, prefix: string): string {
 
 async function findElixirFiles(repoPath: string): Promise<string[]> {
   const results: string[] = [];
-  const IGNORE = new Set([
-    '_build',
-    'deps',
-    'node_modules',
-    '.git',
-    '.gitnexus',
-    '.elixir_ls',
-    'cover',
-  ]);
+  const ig = await loadIgnoreRules(repoPath);
 
   async function walk(dir: string, rel: string): Promise<void> {
     let entries;
@@ -160,14 +153,16 @@ async function findElixirFiles(repoPath: string): Promise<string[]> {
       return;
     }
     for (const entry of entries) {
-      if (IGNORE.has(entry.name)) continue;
       const childRel = rel ? `${rel}/${entry.name}` : entry.name;
       if (entry.isDirectory()) {
+        if (shouldIgnorePath(childRel)) continue;
+        if (ig && ig.ignores(childRel + '/')) continue;
         await walk(path.join(dir, entry.name), childRel);
       } else if (entry.name.endsWith('.ex') || entry.name.endsWith('.exs')) {
-        if (entry.name !== 'mix.exs' && entry.name !== 'mix.lock') {
-          results.push(childRel);
-        }
+        if (entry.name === 'mix.exs' || entry.name === 'mix.lock') continue;
+        if (shouldIgnorePath(childRel)) continue;
+        if (ig && ig.ignores(childRel)) continue;
+        results.push(childRel);
       }
     }
   }
@@ -203,6 +198,13 @@ export async function extractElixirWorkspaceLinks(
       repoPath,
       deps: manifest.deps,
     };
+    const existing = appsByName.get(manifest.appName);
+    if (existing) {
+      console.warn(
+        `[elixir-workspace-extractor] duplicate app "${manifest.appName}" in "${groupPath}" and "${existing.groupPath}" — skipping "${groupPath}"`,
+      );
+      continue;
+    }
     appsByName.set(manifest.appName, meta);
     appsByGroupPath.set(groupPath, meta);
   }

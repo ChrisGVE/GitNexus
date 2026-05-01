@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { CypherExecutor } from '../contract-extractor.js';
 import type { GroupManifestLink, ContractRole } from '../types.js';
+import { shouldIgnorePath, loadIgnoreRules } from '../../../config/ignore-service.js';
 
 interface GoModuleMeta {
   modulePath: string;
@@ -163,13 +164,7 @@ function escapeRegex(s: string): string {
 
 async function findGoFiles(repoPath: string): Promise<string[]> {
   const results: string[] = [];
-  const IGNORE = new Set([
-    'vendor',
-    'node_modules',
-    '.git',
-    '.gitnexus',
-    'testdata',
-  ]);
+  const ig = await loadIgnoreRules(repoPath);
 
   async function walk(dir: string, rel: string): Promise<void> {
     let entries;
@@ -179,11 +174,14 @@ async function findGoFiles(repoPath: string): Promise<string[]> {
       return;
     }
     for (const entry of entries) {
-      if (IGNORE.has(entry.name)) continue;
       const childRel = rel ? `${rel}/${entry.name}` : entry.name;
       if (entry.isDirectory()) {
+        if (shouldIgnorePath(childRel)) continue;
+        if (ig && ig.ignores(childRel + '/')) continue;
         await walk(path.join(dir, entry.name), childRel);
       } else if (entry.name.endsWith('.go') && !entry.name.endsWith('_test.go')) {
+        if (shouldIgnorePath(childRel)) continue;
+        if (ig && ig.ignores(childRel)) continue;
         results.push(childRel);
       }
     }
@@ -219,6 +217,13 @@ export async function extractGoWorkspaceLinks(
       repoPath,
       requires: manifest.requires,
     };
+    const existing = modulesByPath.get(manifest.modulePath);
+    if (existing) {
+      console.warn(
+        `[go-workspace-extractor] duplicate module "${manifest.modulePath}" in "${groupPath}" and "${existing.groupPath}" — skipping "${groupPath}"`,
+      );
+      continue;
+    }
     modulesByPath.set(manifest.modulePath, meta);
     modulesByGroupPath.set(groupPath, meta);
   }
@@ -241,7 +246,9 @@ export async function extractGoWorkspaceLinks(
       const providerMod = modulesByPath.get(imp.modulePath);
       if (!providerMod) continue;
 
-      const key = `${mod.groupPath}→${providerMod.groupPath}::${imp.symbolName}`;
+      const shortModule = imp.modulePath.split('/').pop() || imp.modulePath;
+      const qualifiedContract = `${shortModule}::${imp.symbolName}`;
+      const key = `${mod.groupPath}→${providerMod.groupPath}::${qualifiedContract}`;
       if (seen.has(key)) continue;
       seen.add(key);
 
@@ -249,7 +256,7 @@ export async function extractGoWorkspaceLinks(
         from: providerMod.groupPath,
         to: mod.groupPath,
         type: 'custom',
-        contract: imp.symbolName,
+        contract: qualifiedContract,
         role: 'provider' as ContractRole,
       };
       links.push(link);
