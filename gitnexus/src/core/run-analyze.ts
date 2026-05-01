@@ -26,7 +26,7 @@ import {
   getStoragePaths,
   saveMeta,
   loadMeta,
-  ensureGitNexusInternalGitignore,
+  ensureGitNexusIgnored,
   registerRepo,
   cleanupOldKuzuFiles,
 } from '../storage/repo-manager.js';
@@ -166,7 +166,7 @@ export async function runFullAnalysis(
   if (existingMeta && !options.force && existingMeta.lastCommit === currentCommit) {
     // Non-git folders have currentCommit = '' — always rebuild since we can't detect changes
     if (currentCommit !== '') {
-      await ensureGitNexusInternalGitignore(repoPath);
+      await ensureGitNexusIgnored(repoPath);
       return {
         repoName: options.registryName ?? getInferredRepoName(repoPath) ?? path.basename(repoPath),
         repoPath,
@@ -450,7 +450,7 @@ export async function runFullAnalysis(
 
     // Keep generated .gitnexus contents ignored without editing the user's root .gitignore.
     if (hasGitDir(repoPath)) {
-      await ensureGitNexusInternalGitignore(repoPath);
+      await ensureGitNexusIgnored(repoPath);
     }
 
     // ── Generate AI context files (best-effort) ───────────────────────
