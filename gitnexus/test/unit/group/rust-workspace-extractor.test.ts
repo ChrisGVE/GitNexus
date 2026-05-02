@@ -231,7 +231,9 @@ describe('RustWorkspaceExtractor', () => {
 
     const warnings: string[] = [];
     const origWarn = console.warn;
-    console.warn = (...args: unknown[]) => { warnings.push(String(args[0])); };
+    console.warn = (...args: unknown[]) => {
+      warnings.push(String(args[0]));
+    };
     const result = await extractRustWorkspaceLinks(repos, repoPaths);
     console.warn = origWarn;
 
@@ -257,10 +259,7 @@ describe('RustWorkspaceExtractor', () => {
       'app/Cargo.toml',
       `[package]\nname = "myapp"\nversion = "0.1.0"\n\n[dependencies]\nalpha = { workspace = true }\nbeta = { workspace = true }\n`,
     );
-    await writeFile(
-      'app/src/main.rs',
-      'use alpha::Config;\nuse beta::Config;\n',
-    );
+    await writeFile('app/src/main.rs', 'use alpha::Config;\nuse beta::Config;\n');
 
     const repos = { alpha: 'alpha', beta: 'beta', app: 'myapp' };
     const repoPaths = new Map([
@@ -289,14 +288,8 @@ describe('RustWorkspaceExtractor', () => {
       'app/Cargo.toml',
       `[package]\nname = "myapp"\nversion = "0.1.0"\n\n[dependencies]\nmylib = { workspace = true }\n`,
     );
-    await writeFile(
-      'app/src/main.rs',
-      'use mylib::Real;\n',
-    );
-    await writeFile(
-      'app/generated/gen.rs',
-      'use mylib::Fake;\n',
-    );
+    await writeFile('app/src/main.rs', 'use mylib::Real;\n');
+    await writeFile('app/generated/gen.rs', 'use mylib::Fake;\n');
     await writeFile('app/.gitnexusignore', 'generated/\n');
 
     const repos = { lib: 'mylib', app: 'myapp' };

@@ -90,10 +90,7 @@ async function parseCrateManifest(
  * Scan Rust source files for `use <crate>::<path>::<Symbol>` patterns
  * where <crate> is a known workspace dependency.
  */
-async function scanImports(
-  repoPath: string,
-  knownCrates: Set<string>,
-): Promise<ImportedSymbol[]> {
+async function scanImports(repoPath: string, knownCrates: Set<string>): Promise<ImportedSymbol[]> {
   const results: ImportedSymbol[] = [];
 
   const normalizedCrates = new Map<string, string>();
