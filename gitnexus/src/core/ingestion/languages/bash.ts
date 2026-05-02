@@ -93,6 +93,8 @@ const BUILT_INS: ReadonlySet<string> = new Set([
 export const bashProvider = defineLanguage({
   id: SupportedLanguages.Bash,
   extensions: ['.sh', '.bash'],
+  entryPointPatterns: [/^main$/],
+  astFrameworkPatterns: [],
   treeSitterQueries: BASH_QUERIES,
   typeConfig: bashConfig,
   exportChecker: bashExportChecker,
