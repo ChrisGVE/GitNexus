@@ -269,14 +269,13 @@ export class ManifestExtractor {
           { contract: link.contract },
         );
       } else if (link.type === 'custom') {
-        // Exact name match on code symbols (Struct, Enum, Trait, Function,
-        // Class, Interface, Method). Excludes File/Folder/Community/Process
-        // to avoid false positives from non-symbol nodes that happen to
-        // share the name. Useful for Rust cross-crate types and other
-        // language-agnostic cross-repo contracts.
+        // V1: exact name-only match on code-definition nodes.
+        // Positive allowlist mirrors other contract types. If multiple code
+        // symbols share the same name, ORDER BY filePath ASC LIMIT 1 picks
+        // the alphabetically-first occurrence deterministically.
         rows = await executor(
-          `MATCH (n) WHERE n.name = $contract
-           AND NOT n:File AND NOT n:Folder AND NOT n:Community AND NOT n:Process
+          `MATCH (n:Function|Method|Class|Interface|Struct|Enum|Trait|Constructor|TypeAlias|Impl|Macro|Union|Typedef|Property|Record|Delegate|Annotation|Template|Const|Static|CodeElement)
+           WHERE n.name = $contract
            RETURN n.id AS uid, n.name AS name, n.filePath AS filePath
            ORDER BY n.filePath ASC
            LIMIT 1`,

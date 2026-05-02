@@ -665,6 +665,77 @@ describe('ManifestExtractor', () => {
     expect(provider?.symbolUid).toBe('manifest::core/units::custom::Dimension');
   });
 
+  it('custom contract query uses positive label allowlist (not negative exclusion)', async () => {
+    const links: GroupManifestLink[] = [
+      {
+        from: 'parser/mathlex',
+        to: 'engine/thales',
+        type: 'custom',
+        contract: 'Route',
+        role: 'provider',
+      },
+    ];
+    let capturedCypher = '';
+    const dbExecutors = new Map<
+      string,
+      (cypher: string, params?: Record<string, unknown>) => Promise<Record<string, unknown>[]>
+    >([
+      [
+        'parser/mathlex',
+        async (cypher) => {
+          capturedCypher = cypher;
+          return [];
+        },
+      ],
+      ['engine/thales', async () => []],
+    ]);
+
+    await extractor.extractFromManifest(links, dbExecutors);
+
+    expect(capturedCypher).toContain('Function|Method|Class|Interface|Struct|Enum|Trait');
+    expect(capturedCypher).not.toContain('NOT n:File');
+  });
+
+  it('custom contract with ambiguous name returns first-by-filePath deterministically', async () => {
+    const links: GroupManifestLink[] = [
+      {
+        from: 'parser/mathlex',
+        to: 'engine/thales',
+        type: 'custom',
+        contract: 'Token',
+        role: 'provider',
+      },
+    ];
+
+    const dbExecutors = new Map<
+      string,
+      (cypher: string, params?: Record<string, unknown>) => Promise<Record<string, unknown>[]>
+    >([
+      [
+        'parser/mathlex',
+        async (_cypher, params) => {
+          if (params?.contract === 'Token') {
+            return [{ uid: 'uid-token-first', name: 'Token', filePath: 'src/ast.rs' }];
+          }
+          return [];
+        },
+      ],
+      [
+        'engine/thales',
+        async (_cypher, params) => {
+          if (params?.contract === 'Token') {
+            return [{ uid: 'uid-token-consumer', name: 'Token', filePath: 'src/lexer.rs' }];
+          }
+          return [];
+        },
+      ],
+    ]);
+
+    const result = await extractor.extractFromManifest(links, dbExecutors);
+    const provider = result.contracts.find((c) => c.role === 'provider');
+    expect(provider?.symbolUid).toBe('uid-token-first');
+  });
+
   it('returns empty for no links', async () => {
     const result = await extractor.extractFromManifest([]);
     expect(result.contracts).toHaveLength(0);
