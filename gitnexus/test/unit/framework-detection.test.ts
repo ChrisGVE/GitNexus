@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   detectFrameworkFromPath,
   detectFrameworkFromAST,
-  FRAMEWORK_AST_PATTERNS,
 } from '../../src/core/ingestion/framework-detection.js';
+import { providers } from '../../src/core/ingestion/languages/index.js';
 
 describe('detectFrameworkFromPath', () => {
   describe('Next.js', () => {
@@ -359,24 +359,26 @@ describe('detectFrameworkFromAST', () => {
   });
 });
 
-describe('FRAMEWORK_AST_PATTERNS', () => {
-  it('has patterns for all expected frameworks', () => {
-    const expectedFrameworks = [
+describe('provider astFrameworkPatterns', () => {
+  it('covers all expected frameworks across providers', () => {
+    const expectedFrameworks = new Set([
       'nestjs',
       'expo-router',
-      'express',
       'fastapi',
       'flask',
       'spring',
       'jaxrs',
       'aspnet',
+      'signalr',
+      'blazor',
+      'efcore',
       'go-http',
       'gin',
       'echo',
       'fiber',
       'go-grpc',
       'laravel',
-      'actix',
+      'actix-web',
       'axum',
       'rocket',
       'tokio',
@@ -386,12 +388,21 @@ describe('FRAMEWORK_AST_PATTERNS', () => {
       'vapor',
       'rails',
       'sinatra',
-    ];
+      'spring-kotlin',
+      'ktor',
+      'android-kotlin',
+      'flutter',
+      'riverpod',
+    ]);
+    const foundFrameworks = new Set<string>();
+    for (const provider of Object.values(providers)) {
+      for (const cfg of provider.astFrameworkPatterns ?? []) {
+        foundFrameworks.add(cfg.framework);
+        expect(cfg.patterns.length).toBeGreaterThan(0);
+      }
+    }
     for (const fw of expectedFrameworks) {
-      expect(FRAMEWORK_AST_PATTERNS).toHaveProperty(fw);
-      expect(
-        FRAMEWORK_AST_PATTERNS[fw as keyof typeof FRAMEWORK_AST_PATTERNS].length,
-      ).toBeGreaterThan(0);
+      expect(foundFrameworks.has(fw), `missing framework: ${fw}`).toBe(true);
     }
   });
 });
