@@ -234,12 +234,15 @@ describe('RustWorkspaceExtractor', () => {
     console.warn = (...args: unknown[]) => {
       warnings.push(String(args[0]));
     };
-    const result = await extractRustWorkspaceLinks(repos, repoPaths);
-    console.warn = origWarn;
+    try {
+      const result = await extractRustWorkspaceLinks(repos, repoPaths);
 
-    expect(warnings.some((w) => w.includes('duplicate crate name "shared"'))).toBe(true);
-    expect(result.links).toHaveLength(1);
-    expect(result.links[0].from).toBe('a');
+      expect(warnings.some((w) => w.includes('duplicate crate name "shared"'))).toBe(true);
+      expect(result.links).toHaveLength(1);
+      expect(result.links[0].from).toBe('a');
+    } finally {
+      console.warn = origWarn;
+    }
   });
 
   it('produces distinct contracts when two crates export same symbol name', async () => {

@@ -85,12 +85,14 @@ export async function syncGroup(config: GroupConfig, opts?: SyncOptions): Promis
   let autoContracts: StoredContract[] = [];
   let manifestCrossLinks: CrossLink[] = [];
   let dbExecutors: Map<string, CypherExecutor> | undefined;
+  let registryEntries: RegistryEntry[] | undefined;
 
   const eo = opts?.extractorOverride;
   if (eo && eo.length === 0) {
     autoContracts = await (eo as () => Promise<StoredContract[]>)();
   } else {
-    const entries = await readRegistry();
+    registryEntries = await readRegistry();
+    const entries = registryEntries;
     const resolve = opts?.resolveRepoHandle ?? defaultResolveHandle(entries);
     const httpEx = new HttpRouteExtractor();
     const grpcEx = new GrpcExtractor();
@@ -185,9 +187,9 @@ export async function syncGroup(config: GroupConfig, opts?: SyncOptions): Promis
 
   if (config.detect.workspace_deps) {
     const repoPaths = new Map<string, string>();
-    const entries = await readRegistry();
+    if (!registryEntries) registryEntries = await readRegistry();
     for (const [groupPath, regName] of Object.entries(config.repos)) {
-      const e = entries.find((en) => en.name === regName);
+      const e = registryEntries.find((en) => en.name === regName);
       if (e) repoPaths.set(groupPath, e.path);
     }
 
