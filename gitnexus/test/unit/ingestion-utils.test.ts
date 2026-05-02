@@ -115,13 +115,28 @@ describe('getLanguageFromFilename', () => {
     });
   });
 
+  describe('Bash', () => {
+    it.each(['.sh', '.bash'])('detects %s files', (ext) => {
+      expect(getLanguageFromFilename(`file${ext}`)).toBe(SupportedLanguages.Bash);
+    });
+  });
+
+  describe('Lua', () => {
+    it('detects .lua files', () => {
+      expect(getLanguageFromFilename('init.lua')).toBe(SupportedLanguages.Lua);
+    });
+  });
+
+  describe('Scala', () => {
+    it.each(['.scala', '.sc'])('detects %s files', (ext) => {
+      expect(getLanguageFromFilename(`file${ext}`)).toBe(SupportedLanguages.Scala);
+    });
+  });
+
   describe('unsupported', () => {
-    it.each(['.scala', '.r', '.lua', '.zig', '.txt', '.md', '.json', '.yaml'])(
-      'returns null for %s files',
-      (ext) => {
-        expect(getLanguageFromFilename(`file${ext}`)).toBeNull();
-      },
-    );
+    it.each(['.r', '.zig', '.txt', '.md', '.json', '.yaml'])('returns null for %s files', (ext) => {
+      expect(getLanguageFromFilename(`file${ext}`)).toBeNull();
+    });
 
     it('returns null for files without extension', () => {
       expect(getLanguageFromFilename('Makefile')).toBeNull();
