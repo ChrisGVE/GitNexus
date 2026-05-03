@@ -22,6 +22,7 @@ export enum SupportedLanguages {
   Vue = 'vue',
   Bash = 'bash',
   Lua = 'lua',
+  Scala = 'scala',
   /** Standalone regex processor — no tree-sitter, no LanguageProvider. */
   Cobol = 'cobol',
 }

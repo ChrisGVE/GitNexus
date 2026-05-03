@@ -41,6 +41,7 @@ export const LanguageClassifications: Readonly<Record<SupportedLanguages, Langua
     [SupportedLanguages.Dart]: 'production',
     [SupportedLanguages.Bash]: 'experimental',
     [SupportedLanguages.Lua]: 'experimental',
+    [SupportedLanguages.Scala]: 'experimental',
     [SupportedLanguages.Vue]: 'experimental',
     [SupportedLanguages.Cobol]: 'experimental',
   };

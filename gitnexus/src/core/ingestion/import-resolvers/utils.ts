@@ -53,6 +53,9 @@ export const EXTENSIONS = [
   // Lua
   '.lua',
   '/init.lua',
+  // Scala
+  '.scala',
+  '.sc',
 ];
 
 /**

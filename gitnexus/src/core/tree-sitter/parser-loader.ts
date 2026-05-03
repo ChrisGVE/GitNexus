@@ -158,6 +158,11 @@ const SOURCES: Record<string, GrammarSource> = {
     unavailableNote:
       'Bash parsing requires `tree-sitter-bash`. Check the install and native binding.',
   },
+  [SupportedLanguages.Scala]: {
+    load: () => _require('tree-sitter-scala'),
+    unavailableNote:
+      'Scala parsing requires `tree-sitter-scala`. Check the install and native binding.',
+  },
   [SupportedLanguages.Kotlin]: {
     load: () => _require('tree-sitter-kotlin'),
     optional: true,
