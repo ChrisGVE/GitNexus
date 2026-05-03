@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { SupportedLanguages } from 'gitnexus-shared';
 import {
   detectFrameworkFromPath,
   detectFrameworkFromAST,
@@ -359,7 +360,41 @@ describe('detectFrameworkFromAST', () => {
   });
 });
 
+describe('provider registry exhaustiveness', () => {
+  // Compile-time exhaustiveness is enforced by `satisfies Record<SupportedLanguages, ...>`
+  // in languages/index.ts. This runtime guard catches drift if the enum and the
+  // providers map ever diverge at runtime (e.g. via build-artifact mismatch),
+  // since both shared lookup maps are built from `Object.entries(providers)`.
+  it('has one provider per SupportedLanguages enum member', () => {
+    expect(Object.keys(providers).sort()).toEqual(Object.values(SupportedLanguages).sort());
+  });
+});
+
 describe('provider astFrameworkPatterns', () => {
+  it('preserves multiplier and reason for high-priority frameworks', () => {
+    // Pin the exact multiplier and reason strings to catch silent drift
+    // during the per-language pattern relocation. These three frameworks
+    // are the most-used decorator-driven entry-point boosters.
+    const expectedConfigs: Record<string, { multiplier: number; reason: string }> = {
+      nestjs: { multiplier: 3.2, reason: 'nestjs-decorator' },
+      spring: { multiplier: 3.2, reason: 'spring-annotation' },
+      fastapi: { multiplier: 3.0, reason: 'fastapi-decorator' },
+    };
+    const seen = new Set<string>();
+    for (const provider of Object.values(providers)) {
+      for (const cfg of provider.astFrameworkPatterns ?? []) {
+        const expected = expectedConfigs[cfg.framework];
+        if (!expected) continue;
+        expect(cfg.entryPointMultiplier).toBe(expected.multiplier);
+        expect(cfg.reason).toBe(expected.reason);
+        seen.add(cfg.framework);
+      }
+    }
+    for (const fw of Object.keys(expectedConfigs)) {
+      expect(seen.has(fw), `missing framework config: ${fw}`).toBe(true);
+    }
+  });
+
   it('covers all expected frameworks across providers', () => {
     const expectedFrameworks = new Set([
       'nestjs',
