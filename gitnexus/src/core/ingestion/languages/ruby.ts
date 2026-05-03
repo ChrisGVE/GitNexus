@@ -176,7 +176,7 @@ export const rubyProvider = defineLanguage({
       reason: 'sinatra-pattern',
       patterns: ['Sinatra::Base', 'Sinatra::Application'],
     },
-  ],
+  ] satisfies AstFrameworkPatternConfig[],
   treeSitterQueries: RUBY_QUERIES,
   typeConfig: rubyConfig,
   exportChecker: rubyExportChecker,

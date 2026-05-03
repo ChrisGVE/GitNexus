@@ -313,7 +313,7 @@ export const swiftProvider = defineLanguage({
       reason: 'vapor-routing',
       patterns: ['app.get', 'app.post', 'req.content.decode', 'Vapor'],
     },
-  ],
+  ] satisfies AstFrameworkPatternConfig[],
   treeSitterQueries: SWIFT_QUERIES,
   typeConfig: swiftConfig,
   exportChecker: swiftExportChecker,

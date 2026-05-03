@@ -274,7 +274,7 @@ export const phpProvider = defineLanguage({
         '#[Route(',
       ],
     },
-  ],
+  ] satisfies AstFrameworkPatternConfig[],
   treeSitterQueries: PHP_QUERIES,
   typeConfig: phpConfig,
   exportChecker: phpExportChecker,

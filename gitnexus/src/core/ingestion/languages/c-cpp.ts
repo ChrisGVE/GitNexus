@@ -408,7 +408,7 @@ export const cppProvider = defineLanguage({
         'QApplication',
       ],
     },
-  ],
+  ] satisfies AstFrameworkPatternConfig[],
   treeSitterQueries: CPP_QUERIES,
   typeConfig: cCppConfig,
   exportChecker: cCppExportChecker,

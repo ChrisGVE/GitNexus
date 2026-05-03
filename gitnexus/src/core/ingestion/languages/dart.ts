@@ -129,7 +129,7 @@ export const dartProvider = defineLanguage({
       reason: 'riverpod-pattern',
       patterns: ['@riverpod', 'ref.watch', 'ref.read', 'AsyncNotifier', 'Notifier'],
     },
-  ],
+  ] satisfies AstFrameworkPatternConfig[],
   treeSitterQueries: DART_QUERIES,
   typeConfig: dartConfig,
   exportChecker: dartExportChecker,
