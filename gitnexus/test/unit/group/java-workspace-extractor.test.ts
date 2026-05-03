@@ -38,10 +38,7 @@ describe('JavaWorkspaceExtractor', () => {
       'package com.acme.models;\npublic class User {}\n',
     );
 
-    await writeFile(
-      'api/pom.xml',
-      pomTemplate('com.acme', 'api', ['com.acme:models']),
-    );
+    await writeFile('api/pom.xml', pomTemplate('com.acme', 'api', ['com.acme:models']));
     await writeFile(
       'api/src/main/java/com/acme/api/UserService.java',
       'package com.acme.api;\nimport com.acme.models.User;\npublic class UserService {}\n',
@@ -66,10 +63,7 @@ describe('JavaWorkspaceExtractor', () => {
   });
 
   it('handles Gradle build files', async () => {
-    await writeFile(
-      'core/build.gradle.kts',
-      "group = \"com.acme\"\nversion = \"1.0\"\n",
-    );
+    await writeFile('core/build.gradle.kts', 'group = "com.acme"\nversion = "1.0"\n');
     await writeFile(
       'core/src/main/java/com/acme/core/Config.java',
       'package com.acme.core;\npublic class Config {}\n',
@@ -77,7 +71,7 @@ describe('JavaWorkspaceExtractor', () => {
 
     await writeFile(
       'svc/build.gradle.kts',
-      "group = \"com.acme\"\nversion = \"1.0\"\ndependencies {\n  implementation(\"com.acme:core:1.0\")\n}\n",
+      'group = "com.acme"\nversion = "1.0"\ndependencies {\n  implementation("com.acme:core:1.0")\n}\n',
     );
     await writeFile(
       'svc/src/main/java/com/acme/svc/App.java',
@@ -97,10 +91,7 @@ describe('JavaWorkspaceExtractor', () => {
   });
 
   it('handles Gradle project dependencies', async () => {
-    await writeFile(
-      'common/build.gradle',
-      "group = 'com.org'\nversion = '1.0'\n",
-    );
+    await writeFile('common/build.gradle', "group = 'com.org'\nversion = '1.0'\n");
     await writeFile(
       'common/src/main/java/com/org/common/Entity.java',
       'package com.org.common;\npublic class Entity {}\n',
@@ -134,10 +125,7 @@ describe('JavaWorkspaceExtractor', () => {
       'package com.acme.lib;\npublic class Constants {}\n',
     );
 
-    await writeFile(
-      'app/pom.xml',
-      pomTemplate('com.acme', 'app', ['com.acme:lib']),
-    );
+    await writeFile('app/pom.xml', pomTemplate('com.acme', 'app', ['com.acme:lib']));
     await writeFile(
       'app/src/main/java/com/acme/app/Main.java',
       'package com.acme.app;\nimport static com.acme.lib.Constants;\npublic class Main {}\n',
@@ -174,10 +162,7 @@ describe('JavaWorkspaceExtractor', () => {
       'package com.acme.lib;\npublic class Token {}\n',
     );
 
-    await writeFile(
-      'app/pom.xml',
-      pomTemplate('com.acme', 'app', ['com.acme:lib']),
-    );
+    await writeFile('app/pom.xml', pomTemplate('com.acme', 'app', ['com.acme:lib']));
     await writeFile(
       'app/src/main/java/com/acme/app/A.java',
       'package com.acme.app;\nimport com.acme.lib.Token;\npublic class A {}\n',
@@ -205,10 +190,7 @@ describe('JavaWorkspaceExtractor', () => {
       'package com.acme.lib\ndata class Model(val id: Int)\n',
     );
 
-    await writeFile(
-      'app/pom.xml',
-      pomTemplate('com.acme', 'app', ['com.acme:lib']),
-    );
+    await writeFile('app/pom.xml', pomTemplate('com.acme', 'app', ['com.acme:lib']));
     await writeFile(
       'app/src/main/kotlin/com/acme/app/Main.kt',
       'package com.acme.app\nimport com.acme.lib.Model\nfun main() {}\n',
@@ -237,10 +219,7 @@ describe('JavaWorkspaceExtractor', () => {
       'package com.acme.lib;\npublic class Response {}\n',
     );
 
-    await writeFile(
-      'app/pom.xml',
-      pomTemplate('com.acme', 'app', ['com.acme:lib']),
-    );
+    await writeFile('app/pom.xml', pomTemplate('com.acme', 'app', ['com.acme:lib']));
     await writeFile(
       'app/src/main/java/com/acme/app/Handler.java',
       'package com.acme.app;\nimport com.acme.lib.Request;\nimport com.acme.lib.Response;\npublic class Handler {}\n',

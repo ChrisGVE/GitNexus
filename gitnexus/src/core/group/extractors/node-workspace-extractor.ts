@@ -67,8 +67,7 @@ async function scanImports(
 
     // ES import: import { Foo, Bar } from '<pkg>'
     // Also: import { Foo as Baz } from '<pkg>'
-    const esImportRegex =
-      /^import\s+\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/gm;
+    const esImportRegex = /^import\s+\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/gm;
     let match;
     while ((match = esImportRegex.exec(content)) !== null) {
       const importClause = match[1];
@@ -85,8 +84,7 @@ async function scanImports(
     }
 
     // ES import default: import Foo from '<pkg>'
-    const defaultImportRegex =
-      /^import\s+([A-Z][A-Za-z0-9]*)\s+from\s+['"]([^'"]+)['"]/gm;
+    const defaultImportRegex = /^import\s+([A-Z][A-Za-z0-9]*)\s+from\s+['"]([^'"]+)['"]/gm;
     while ((match = defaultImportRegex.exec(content)) !== null) {
       const symbolName = match[1];
       const modulePath = match[2];
@@ -99,8 +97,7 @@ async function scanImports(
     }
 
     // CommonJS: const { Foo, Bar } = require('<pkg>')
-    const cjsRegex =
-      /(?:const|let|var)\s+\{([^}]+)\}\s*=\s*require\s*\(\s*['"]([^'"]+)['"]\s*\)/gm;
+    const cjsRegex = /(?:const|let|var)\s+\{([^}]+)\}\s*=\s*require\s*\(\s*['"]([^'"]+)['"]\s*\)/gm;
     while ((match = cjsRegex.exec(content)) !== null) {
       const importClause = match[1];
       const modulePath = match[2];

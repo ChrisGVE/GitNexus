@@ -26,10 +26,7 @@ describe('ElixirWorkspaceExtractor', () => {
       'core/mix.exs',
       'defmodule Core.MixProject do\n  use Mix.Project\n  def project do\n    [app: :core, version: "0.1.0"]\n  end\nend\n',
     );
-    await writeFile(
-      'core/lib/core/schema.ex',
-      'defmodule Core.Schema do\nend\n',
-    );
+    await writeFile('core/lib/core/schema.ex', 'defmodule Core.Schema do\nend\n');
 
     await writeFile(
       'web/mix.exs',
@@ -121,19 +118,13 @@ describe('ElixirWorkspaceExtractor', () => {
       'data-store/mix.exs',
       'defmodule DataStore.MixProject do\n  use Mix.Project\n  def project do\n    [app: :data_store, version: "0.1.0"]\n  end\nend\n',
     );
-    await writeFile(
-      'data-store/lib/data_store/repo.ex',
-      'defmodule DataStore.Repo do\nend\n',
-    );
+    await writeFile('data-store/lib/data_store/repo.ex', 'defmodule DataStore.Repo do\nend\n');
 
     await writeFile(
       'web/mix.exs',
       'defmodule Web.MixProject do\n  use Mix.Project\n  def project do\n    [app: :web, version: "0.1.0"]\n  end\n  defp deps do\n    [{:data_store, in_umbrella: true}]\n  end\nend\n',
     );
-    await writeFile(
-      'web/lib/web/page.ex',
-      'defmodule Web.Page do\n  alias DataStore.Repo\nend\n',
-    );
+    await writeFile('web/lib/web/page.ex', 'defmodule Web.Page do\n  alias DataStore.Repo\nend\n');
 
     const repos = { store: 'data_store', web: 'web' };
     const repoPaths = new Map([

@@ -22,14 +22,8 @@ describe('GoWorkspaceExtractor', () => {
   }
 
   it('discovers cross-module type usage via require', async () => {
-    await writeFile(
-      'models/go.mod',
-      'module github.com/org/models\n\ngo 1.21\n',
-    );
-    await writeFile(
-      'models/schema.go',
-      'package models\n\ntype Schema struct {}\n',
-    );
+    await writeFile('models/go.mod', 'module github.com/org/models\n\ngo 1.21\n');
+    await writeFile('models/schema.go', 'package models\n\ntype Schema struct {}\n');
 
     await writeFile(
       'api/go.mod',
@@ -62,10 +56,7 @@ describe('GoWorkspaceExtractor', () => {
   });
 
   it('handles block require syntax', async () => {
-    await writeFile(
-      'auth/go.mod',
-      'module github.com/org/auth\n\ngo 1.21\n',
-    );
+    await writeFile('auth/go.mod', 'module github.com/org/auth\n\ngo 1.21\n');
     await writeFile('auth/token.go', 'package auth\n\ntype Token struct {}\n');
 
     await writeFile(
@@ -90,14 +81,8 @@ describe('GoWorkspaceExtractor', () => {
   });
 
   it('handles subpackage imports (module/pkg)', async () => {
-    await writeFile(
-      'core/go.mod',
-      'module github.com/org/core\n\ngo 1.21\n',
-    );
-    await writeFile(
-      'core/types/entity.go',
-      'package types\n\ntype Entity struct {}\n',
-    );
+    await writeFile('core/go.mod', 'module github.com/org/core\n\ngo 1.21\n');
+    await writeFile('core/types/entity.go', 'package types\n\ntype Entity struct {}\n');
 
     await writeFile(
       'app/go.mod',
@@ -121,10 +106,7 @@ describe('GoWorkspaceExtractor', () => {
   });
 
   it('handles replace directive with local paths', async () => {
-    await writeFile(
-      'lib/go.mod',
-      'module github.com/org/lib\n\ngo 1.21\n',
-    );
+    await writeFile('lib/go.mod', 'module github.com/org/lib\n\ngo 1.21\n');
     await writeFile('lib/config.go', 'package lib\n\ntype Config struct {}\n');
 
     await writeFile(
@@ -149,14 +131,8 @@ describe('GoWorkspaceExtractor', () => {
   });
 
   it('ignores unexported (lowercase) identifiers', async () => {
-    await writeFile(
-      'lib/go.mod',
-      'module github.com/org/lib\n\ngo 1.21\n',
-    );
-    await writeFile(
-      'lib/util.go',
-      'package lib\n\nfunc helper() {}\ntype Config struct {}\n',
-    );
+    await writeFile('lib/go.mod', 'module github.com/org/lib\n\ngo 1.21\n');
+    await writeFile('lib/util.go', 'package lib\n\nfunc helper() {}\ntype Config struct {}\n');
 
     await writeFile(
       'app/go.mod',
@@ -192,24 +168,15 @@ describe('GoWorkspaceExtractor', () => {
   });
 
   it('deduplicates identical type usage from multiple files', async () => {
-    await writeFile(
-      'lib/go.mod',
-      'module github.com/org/lib\n\ngo 1.21\n',
-    );
+    await writeFile('lib/go.mod', 'module github.com/org/lib\n\ngo 1.21\n');
     await writeFile('lib/model.go', 'package lib\n\ntype Model struct {}\n');
 
     await writeFile(
       'app/go.mod',
       'module github.com/org/app\n\ngo 1.21\n\nrequire github.com/org/lib v0.1.0\n',
     );
-    await writeFile(
-      'app/a.go',
-      'package main\n\nimport "github.com/org/lib"\n\nvar x lib.Model\n',
-    );
-    await writeFile(
-      'app/b.go',
-      'package main\n\nimport "github.com/org/lib"\n\nvar y lib.Model\n',
-    );
+    await writeFile('app/a.go', 'package main\n\nimport "github.com/org/lib"\n\nvar x lib.Model\n');
+    await writeFile('app/b.go', 'package main\n\nimport "github.com/org/lib"\n\nvar y lib.Model\n');
 
     const repos = { lib: 'lib', app: 'app' };
     const repoPaths = new Map([
@@ -223,10 +190,7 @@ describe('GoWorkspaceExtractor', () => {
   });
 
   it('discovers multiple types from the same module', async () => {
-    await writeFile(
-      'lib/go.mod',
-      'module github.com/org/lib\n\ngo 1.21\n',
-    );
+    await writeFile('lib/go.mod', 'module github.com/org/lib\n\ngo 1.21\n');
     await writeFile(
       'lib/types.go',
       'package lib\n\ntype Request struct {}\ntype Response struct {}\n',

@@ -40,18 +40,16 @@ async function parsePythonManifest(
   return parseSetupPy(content);
 }
 
-function parsePyproject(content: string): { name: string; importName: string; deps: string[] } | null {
-  const nameMatch = content.match(
-    /^\[project\]\s*\n(?:[^\[]*?\n)*?name\s*=\s*"([^"]+)"/m,
-  );
+function parsePyproject(
+  content: string,
+): { name: string; importName: string; deps: string[] } | null {
+  const nameMatch = content.match(/^\[project\]\s*\n(?:[^\[]*?\n)*?name\s*=\s*"([^"]+)"/m);
   if (!nameMatch) return null;
   const name = nameMatch[1];
   const importName = name.replace(/-/g, '_');
 
   const deps: string[] = [];
-  const depsMatch = content.match(
-    /^\[project\]\s*\n[\s\S]*?dependencies\s*=\s*\[([\s\S]*?)\]/m,
-  );
+  const depsMatch = content.match(/^\[project\]\s*\n[\s\S]*?dependencies\s*=\s*\[([\s\S]*?)\]/m);
   if (depsMatch) {
     const depLines = depsMatch[1].matchAll(/"([^"]+)"/g);
     for (const m of depLines) {
@@ -59,9 +57,7 @@ function parsePyproject(content: string): { name: string; importName: string; de
     }
   }
 
-  const optMatch = content.match(
-    /\[project\.optional-dependencies\]\s*\n([\s\S]*?)(?=\n\[|$)/,
-  );
+  const optMatch = content.match(/\[project\.optional-dependencies\]\s*\n([\s\S]*?)(?=\n\[|$)/);
   if (optMatch) {
     const optDeps = optMatch[1].matchAll(/"([^"]+)"/g);
     for (const m of optDeps) {
@@ -72,16 +68,16 @@ function parsePyproject(content: string): { name: string; importName: string; de
   return { name, importName, deps: [...new Set(deps)] };
 }
 
-function parseSetupPy(content: string): { name: string; importName: string; deps: string[] } | null {
+function parseSetupPy(
+  content: string,
+): { name: string; importName: string; deps: string[] } | null {
   const nameMatch = content.match(/name\s*=\s*['"]([^'"]+)['"]/);
   if (!nameMatch) return null;
   const name = nameMatch[1];
   const importName = name.replace(/-/g, '_');
 
   const deps: string[] = [];
-  const installMatch = content.match(
-    /install_requires\s*=\s*\[([\s\S]*?)\]/,
-  );
+  const installMatch = content.match(/install_requires\s*=\s*\[([\s\S]*?)\]/);
   if (installMatch) {
     const depLines = installMatch[1].matchAll(/['"]([^'"]+)['"]/g);
     for (const m of depLines) {
@@ -114,8 +110,7 @@ async function scanPythonImports(
 
     // from <pkg> import Foo, Bar
     // from <pkg>.module import Foo
-    const fromImportRegex =
-      /^from\s+(\w[\w.]*)\s+import\s+(.+)/gm;
+    const fromImportRegex = /^from\s+(\w[\w.]*)\s+import\s+(.+)/gm;
     let match;
     while ((match = fromImportRegex.exec(content)) !== null) {
       const modulePath = match[1];

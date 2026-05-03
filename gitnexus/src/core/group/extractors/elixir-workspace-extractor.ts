@@ -117,10 +117,7 @@ function expandAlias(expr: string): string[] {
   return [expr];
 }
 
-function matchModuleToApp(
-  moduleName: string,
-  knownApps: Map<string, string>,
-): string | null {
+function matchModuleToApp(moduleName: string, knownApps: Map<string, string>): string | null {
   for (const [prefix, appName] of knownApps) {
     if (moduleName === prefix || moduleName.startsWith(prefix + '.')) {
       return appName;
