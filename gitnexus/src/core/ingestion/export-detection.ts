@@ -249,3 +249,6 @@ export const dartExportChecker: ExportChecker = (_node, name) => !name.startsWit
 
 /** Bash: all definitions are public (no visibility modifiers in shell). */
 export const bashExportChecker: ExportChecker = (_node, _name) => true;
+
+/** Lua: all definitions are public (no visibility modifiers). Local scope is file-scoped. */
+export const luaExportChecker: ExportChecker = (_node, _name) => true;

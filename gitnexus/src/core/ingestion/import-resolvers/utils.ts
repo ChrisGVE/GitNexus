@@ -50,6 +50,9 @@ export const EXTENSIONS = [
   // Bash
   '.sh',
   '.bash',
+  // Lua
+  '.lua',
+  '/init.lua',
 ];
 
 /**

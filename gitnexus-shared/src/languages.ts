@@ -21,6 +21,7 @@ export enum SupportedLanguages {
   Dart = 'dart',
   Vue = 'vue',
   Bash = 'bash',
+  Lua = 'lua',
   /** Standalone regex processor — no tree-sitter, no LanguageProvider. */
   Cobol = 'cobol',
 }
