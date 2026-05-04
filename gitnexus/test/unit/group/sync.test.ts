@@ -313,8 +313,7 @@ describe('syncGroup', () => {
   });
 
   it('writes registry to groupDir when skipWrite is false', async () => {
-    const tmpDir = path.join(os.tmpdir(), `gitnexus-sync-write-${Date.now()}`);
-    fs.mkdirSync(tmpDir, { recursive: true });
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gitnexus-sync-write-'));
 
     try {
       const config = makeConfig({});
@@ -372,8 +371,7 @@ describe('syncGroup', () => {
     });
 
     it('workspace_deps: true discovers Rust crate links through syncGroup', async () => {
-      tmpDir = path.join(os.tmpdir(), `gitnexus-sync-ws-${Date.now()}`);
-      fs.mkdirSync(tmpDir, { recursive: true });
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gitnexus-sync-ws-'));
 
       writeFileSync(
         'crate-a/Cargo.toml',
@@ -422,8 +420,7 @@ describe('syncGroup', () => {
     });
 
     it('workspace_deps: false skips workspace extraction entirely', async () => {
-      tmpDir = path.join(os.tmpdir(), `gitnexus-sync-ws-off-${Date.now()}`);
-      fs.mkdirSync(tmpDir, { recursive: true });
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gitnexus-sync-ws-off-'));
 
       writeFileSync(
         'crate-a/Cargo.toml',
@@ -455,8 +452,7 @@ describe('syncGroup', () => {
     });
 
     it('discovered workspace links merge with explicit manifest links', async () => {
-      tmpDir = path.join(os.tmpdir(), `gitnexus-sync-ws-merge-${Date.now()}`);
-      fs.mkdirSync(tmpDir, { recursive: true });
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gitnexus-sync-ws-merge-'));
 
       writeFileSync(
         'crate-a/Cargo.toml',
@@ -532,8 +528,7 @@ describe('syncGroup', () => {
     });
 
     it('discovers Node workspace links through syncGroup orchestrator', async () => {
-      tmpDir = path.join(os.tmpdir(), `gitnexus-sync-ws-node-${Date.now()}`);
-      fs.mkdirSync(tmpDir, { recursive: true });
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gitnexus-sync-ws-node-'));
 
       writeFileSync('shared/package.json', '{"name": "@myorg/shared", "version": "1.0.0"}');
       writeFileSync('shared/src/index.ts', 'export class Config {}\n');
