@@ -238,9 +238,11 @@ export const createWorkerPool = (
         const replacement = new Worker(workerUrl);
         try {
           await waitForWorkerOnline(replacement);
-        } catch {
+        } catch (err) {
           await replacement.terminate().catch(() => undefined);
-          throw new Error(`Replacement worker ${workerIndex} failed to start`);
+          throw new Error(
+            `Replacement worker ${workerIndex} failed to start: ${err instanceof Error ? err.message : String(err)}`,
+          );
         }
         if (stopped) {
           await replacement.terminate().catch(() => undefined);
