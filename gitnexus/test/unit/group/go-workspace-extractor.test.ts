@@ -50,7 +50,7 @@ describe('GoWorkspaceExtractor', () => {
       from: 'libs/models',
       to: 'services/api',
       type: 'custom',
-      contract: 'models::Schema',
+      contract: 'github.com/org/models::Schema',
       role: 'provider',
     });
   });
@@ -77,7 +77,7 @@ describe('GoWorkspaceExtractor', () => {
     const result = await extractGoWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('auth::Token');
+    expect(result.links[0].contract).toBe('github.com/org/auth::Token');
   });
 
   it('handles subpackage imports (module/pkg)', async () => {
@@ -102,7 +102,7 @@ describe('GoWorkspaceExtractor', () => {
     const result = await extractGoWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('core::Entity');
+    expect(result.links[0].contract).toBe('github.com/org/core::Entity');
   });
 
   it('handles replace directive with local paths', async () => {
@@ -127,7 +127,7 @@ describe('GoWorkspaceExtractor', () => {
     const result = await extractGoWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('lib::Config');
+    expect(result.links[0].contract).toBe('github.com/org/lib::Config');
   });
 
   it('ignores unexported (lowercase) identifiers', async () => {
@@ -152,7 +152,7 @@ describe('GoWorkspaceExtractor', () => {
     const result = await extractGoWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('lib::Config');
+    expect(result.links[0].contract).toBe('github.com/org/lib::Config');
   });
 
   it('skips repos without go.mod', async () => {
@@ -215,6 +215,6 @@ describe('GoWorkspaceExtractor', () => {
 
     expect(result.links).toHaveLength(2);
     const contracts = result.links.map((l) => l.contract).sort();
-    expect(contracts).toEqual(['lib::Request', 'lib::Response']);
+    expect(contracts).toEqual(['github.com/org/lib::Request', 'github.com/org/lib::Response']);
   });
 });

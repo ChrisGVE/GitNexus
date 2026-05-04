@@ -25,6 +25,7 @@ describe('syncGroup', () => {
       topics: false,
       shared_libs: false,
       embedding_fallback: false,
+      workspace_deps: false,
     },
     matching: { bm25_threshold: 0.7, embedding_threshold: 0.65, max_candidates_per_step: 3 },
   });
@@ -523,7 +524,7 @@ describe('syncGroup', () => {
       });
 
       const manifestLinks = result.crossLinks.filter((cl) => cl.matchType === 'manifest');
-      expect(manifestLinks.length).toBeGreaterThanOrEqual(2);
+      expect(manifestLinks).toHaveLength(2);
 
       const contractIds = manifestLinks.map((cl) => cl.contractId);
       expect(contractIds).toContain('http::GET::/api/parse');
@@ -571,7 +572,7 @@ describe('syncGroup', () => {
       });
 
       const manifestLinks = result.crossLinks.filter((cl) => cl.matchType === 'manifest');
-      expect(manifestLinks.length).toBeGreaterThanOrEqual(1);
+      expect(manifestLinks).toHaveLength(1);
       const nodeLink = manifestLinks.find(
         (cl) => cl.contractId === 'custom::@myorg/shared::Config',
       );

@@ -238,8 +238,7 @@ export async function extractGoWorkspaceLinks(
       const providerMod = modulesByPath.get(imp.modulePath);
       if (!providerMod) continue;
 
-      const shortModule = imp.modulePath.split('/').pop() || imp.modulePath;
-      const qualifiedContract = `${shortModule}::${imp.symbolName}`;
+      const qualifiedContract = `${imp.modulePath}::${imp.symbolName}`;
       const key = `${mod.groupPath}→${providerMod.groupPath}::${qualifiedContract}`;
       if (seen.has(key)) continue;
       seen.add(key);

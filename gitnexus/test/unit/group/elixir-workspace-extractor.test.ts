@@ -204,6 +204,33 @@ describe('ElixirWorkspaceExtractor', () => {
     expect(result.links[0].contract).toBe('Core.Auth');
   });
 
+  it('does not produce false positives from module references in comments', async () => {
+    await writeFile(
+      'auth/mix.exs',
+      'defmodule Auth.MixProject do\n  use Mix.Project\n  def project do\n    [app: :auth, version: "0.1.0"]\n  end\nend\n',
+    );
+    await writeFile('auth/lib/auth/token.ex', 'defmodule Auth.Token do\nend\n');
+
+    await writeFile(
+      'api/mix.exs',
+      'defmodule Api.MixProject do\n  use Mix.Project\n  def project do\n    [app: :api, version: "0.1.0"]\n  end\n  defp deps do\n    [{:auth, path: "../auth"}]\n  end\nend\n',
+    );
+    await writeFile(
+      'api/lib/api/handler.ex',
+      'defmodule Api.Handler do\n  # See Auth.Token for details\n  # Auth.Token.verify() is deprecated\n  def handle, do: :ok\nend\n',
+    );
+
+    const repos = { auth: 'auth', api: 'api' };
+    const repoPaths = new Map([
+      ['auth', path.join(tmpDir, 'auth')],
+      ['api', path.join(tmpDir, 'api')],
+    ]);
+
+    const result = await extractElixirWorkspaceLinks(repos, repoPaths);
+
+    expect(result.links).toHaveLength(0);
+  });
+
   it('handles git and path deps alongside umbrella deps', async () => {
     await writeFile(
       'utils/mix.exs',

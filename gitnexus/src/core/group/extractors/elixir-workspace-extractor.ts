@@ -87,12 +87,17 @@ async function scanElixirImports(
     }
 
     // Direct module reference: MyApp.Module.func() or MyApp.Module
+    // Strip comment lines and string literals to avoid false positives
+    const codeOnly = content
+      .split('\n')
+      .filter((line) => !line.trimStart().startsWith('#'))
+      .join('\n');
     for (const [prefix, appName] of knownApps) {
       const refRegex = new RegExp(
         `\\b(${escapeRegex(prefix)}\\.[A-Z][A-Za-z0-9]*(?:\\.[A-Z][A-Za-z0-9]*)*)`,
         'g',
       );
-      while ((match = refRegex.exec(content)) !== null) {
+      while ((match = refRegex.exec(codeOnly)) !== null) {
         const mod = match[1];
         if (!results.some((r) => r.moduleName === mod && r.filePath === relFile)) {
           results.push({ appName, moduleName: mod, filePath: relFile });
