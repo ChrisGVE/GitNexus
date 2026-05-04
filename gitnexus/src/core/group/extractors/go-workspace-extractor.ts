@@ -51,9 +51,7 @@ async function parseGoMod(
   }
 
   // replace directives (local path deps)
-  const replaceLines = content.matchAll(
-    /^replace\s+(\S+)\s+=>\s+\.\//gm,
-  );
+  const replaceLines = content.matchAll(/^replace\s+(\S+)\s+=>\s+\.\//gm);
   for (const m of replaceLines) {
     if (!requires.includes(m[1])) requires.push(m[1]);
   }
@@ -129,10 +127,7 @@ function extractImportPaths(content: string): string[] {
   return [...new Set(paths)];
 }
 
-function findMatchingModule(
-  importPath: string,
-  knownModules: Map<string, string>,
-): string | null {
+function findMatchingModule(importPath: string, knownModules: Map<string, string>): string | null {
   for (const [modPath] of knownModules) {
     if (importPath === modPath || importPath.startsWith(modPath + '/')) {
       return modPath;
@@ -146,10 +141,7 @@ function extractUsedTypes(content: string, importPath: string): string[] {
   if (!pkgName) return [];
 
   // Match pkg.TypeName where TypeName is PascalCase (exported)
-  const typeRegex = new RegExp(
-    `\\b${escapeRegex(pkgName)}\\.([A-Z][A-Za-z0-9]*)`,
-    'g',
-  );
+  const typeRegex = new RegExp(`\\b${escapeRegex(pkgName)}\\.([A-Z][A-Za-z0-9]*)`, 'g');
   const types = new Set<string>();
   let match;
   while ((match = typeRegex.exec(content)) !== null) {
@@ -246,8 +238,7 @@ export async function extractGoWorkspaceLinks(
       const providerMod = modulesByPath.get(imp.modulePath);
       if (!providerMod) continue;
 
-      const shortModule = imp.modulePath.split('/').pop() || imp.modulePath;
-      const qualifiedContract = `${shortModule}::${imp.symbolName}`;
+      const qualifiedContract = `${imp.modulePath}::${imp.symbolName}`;
       const key = `${mod.groupPath}→${providerMod.groupPath}::${qualifiedContract}`;
       if (seen.has(key)) continue;
       seen.add(key);

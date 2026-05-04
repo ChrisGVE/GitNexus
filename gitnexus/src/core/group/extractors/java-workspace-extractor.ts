@@ -43,12 +43,8 @@ async function parseJavaManifest(
   return null;
 }
 
-function parsePom(
-  content: string,
-): { groupId: string; artifactId: string; deps: string[] } | null {
-  const projectGroupMatch = content.match(
-    /<project[^>]*>[\s\S]*?<groupId>([^<]+)<\/groupId>/,
-  );
+function parsePom(content: string): { groupId: string; artifactId: string; deps: string[] } | null {
+  const projectGroupMatch = content.match(/<project[^>]*>[\s\S]*?<groupId>([^<]+)<\/groupId>/);
   const projectArtifactMatch = content.match(
     /<project[^>]*>[\s\S]*?<artifactId>([^<]+)<\/artifactId>/,
   );
@@ -58,9 +54,7 @@ function parsePom(
   const artifactId = projectArtifactMatch[1].trim();
 
   const deps: string[] = [];
-  const depBlocks = content.matchAll(
-    /<dependency>\s*([\s\S]*?)<\/dependency>/g,
-  );
+  const depBlocks = content.matchAll(/<dependency>\s*([\s\S]*?)<\/dependency>/g);
   for (const block of depBlocks) {
     const gMatch = block[1].match(/<groupId>([^<]+)<\/groupId>/);
     const aMatch = block[1].match(/<artifactId>([^<]+)<\/artifactId>/);

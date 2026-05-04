@@ -32,10 +32,7 @@ describe('PythonWorkspaceExtractor', () => {
       'api/pyproject.toml',
       '[project]\nname = "api-server"\nversion = "0.1.0"\ndependencies = [\n  "shared-models>=0.1.0",\n]\n',
     );
-    await writeFile(
-      'api/api_server/main.py',
-      'from shared_models import Schema\n',
-    );
+    await writeFile('api/api_server/main.py', 'from shared_models import Schema\n');
 
     const repos = { models: 'shared-models', api: 'api-server' };
     const repoPaths = new Map([
@@ -203,10 +200,7 @@ describe('PythonWorkspaceExtractor', () => {
       'app/pyproject.toml',
       '[project]\nname = "myapp"\nversion = "0.1.0"\ndependencies = [\n  "models",\n]\n',
     );
-    await writeFile(
-      'app/myapp/main.py',
-      'from models import Entity as BaseEntity\n',
-    );
+    await writeFile('app/myapp/main.py', 'from models import Entity as BaseEntity\n');
 
     const repos = { lib: 'models', app: 'myapp' };
     const repoPaths = new Map([

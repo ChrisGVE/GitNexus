@@ -87,12 +87,17 @@ async function scanElixirImports(
     }
 
     // Direct module reference: MyApp.Module.func() or MyApp.Module
+    // Strip comment lines and string literals to avoid false positives
+    const codeOnly = content
+      .split('\n')
+      .filter((line) => !line.trimStart().startsWith('#'))
+      .join('\n');
     for (const [prefix, appName] of knownApps) {
       const refRegex = new RegExp(
         `\\b(${escapeRegex(prefix)}\\.[A-Z][A-Za-z0-9]*(?:\\.[A-Z][A-Za-z0-9]*)*)`,
         'g',
       );
-      while ((match = refRegex.exec(content)) !== null) {
+      while ((match = refRegex.exec(codeOnly)) !== null) {
         const mod = match[1];
         if (!results.some((r) => r.moduleName === mod && r.filePath === relFile)) {
           results.push({ appName, moduleName: mod, filePath: relFile });
@@ -117,10 +122,7 @@ function expandAlias(expr: string): string[] {
   return [expr];
 }
 
-function matchModuleToApp(
-  moduleName: string,
-  knownApps: Map<string, string>,
-): string | null {
+function matchModuleToApp(moduleName: string, knownApps: Map<string, string>): string | null {
   for (const [prefix, appName] of knownApps) {
     if (moduleName === prefix || moduleName.startsWith(prefix + '.')) {
       return appName;
@@ -233,6 +235,9 @@ export async function extractElixirWorkspaceLinks(
       if (seen.has(key)) continue;
       seen.add(key);
 
+      // V1: Elixir contracts use the full module name (e.g. "Core.Schema") without
+      // an "appName::" prefix. resolveSymbol will query the graph with this full
+      // string — resolution depends on Elixir indexer storing fully-qualified names.
       const link: GroupManifestLink = {
         from: providerApp.groupPath,
         to: app.groupPath,

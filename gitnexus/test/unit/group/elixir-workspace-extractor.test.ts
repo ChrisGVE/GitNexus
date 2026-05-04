@@ -26,10 +26,7 @@ describe('ElixirWorkspaceExtractor', () => {
       'core/mix.exs',
       'defmodule Core.MixProject do\n  use Mix.Project\n  def project do\n    [app: :core, version: "0.1.0"]\n  end\nend\n',
     );
-    await writeFile(
-      'core/lib/core/schema.ex',
-      'defmodule Core.Schema do\nend\n',
-    );
+    await writeFile('core/lib/core/schema.ex', 'defmodule Core.Schema do\nend\n');
 
     await writeFile(
       'web/mix.exs',
@@ -121,19 +118,13 @@ describe('ElixirWorkspaceExtractor', () => {
       'data-store/mix.exs',
       'defmodule DataStore.MixProject do\n  use Mix.Project\n  def project do\n    [app: :data_store, version: "0.1.0"]\n  end\nend\n',
     );
-    await writeFile(
-      'data-store/lib/data_store/repo.ex',
-      'defmodule DataStore.Repo do\nend\n',
-    );
+    await writeFile('data-store/lib/data_store/repo.ex', 'defmodule DataStore.Repo do\nend\n');
 
     await writeFile(
       'web/mix.exs',
       'defmodule Web.MixProject do\n  use Mix.Project\n  def project do\n    [app: :web, version: "0.1.0"]\n  end\n  defp deps do\n    [{:data_store, in_umbrella: true}]\n  end\nend\n',
     );
-    await writeFile(
-      'web/lib/web/page.ex',
-      'defmodule Web.Page do\n  alias DataStore.Repo\nend\n',
-    );
+    await writeFile('web/lib/web/page.ex', 'defmodule Web.Page do\n  alias DataStore.Repo\nend\n');
 
     const repos = { store: 'data_store', web: 'web' };
     const repoPaths = new Map([
@@ -211,6 +202,33 @@ describe('ElixirWorkspaceExtractor', () => {
 
     expect(result.links).toHaveLength(1);
     expect(result.links[0].contract).toBe('Core.Auth');
+  });
+
+  it('does not produce false positives from module references in comments', async () => {
+    await writeFile(
+      'auth/mix.exs',
+      'defmodule Auth.MixProject do\n  use Mix.Project\n  def project do\n    [app: :auth, version: "0.1.0"]\n  end\nend\n',
+    );
+    await writeFile('auth/lib/auth/token.ex', 'defmodule Auth.Token do\nend\n');
+
+    await writeFile(
+      'api/mix.exs',
+      'defmodule Api.MixProject do\n  use Mix.Project\n  def project do\n    [app: :api, version: "0.1.0"]\n  end\n  defp deps do\n    [{:auth, path: "../auth"}]\n  end\nend\n',
+    );
+    await writeFile(
+      'api/lib/api/handler.ex',
+      'defmodule Api.Handler do\n  # See Auth.Token for details\n  # Auth.Token.verify() is deprecated\n  def handle, do: :ok\nend\n',
+    );
+
+    const repos = { auth: 'auth', api: 'api' };
+    const repoPaths = new Map([
+      ['auth', path.join(tmpDir, 'auth')],
+      ['api', path.join(tmpDir, 'api')],
+    ]);
+
+    const result = await extractElixirWorkspaceLinks(repos, repoPaths);
+
+    expect(result.links).toHaveLength(0);
   });
 
   it('handles git and path deps alongside umbrella deps', async () => {

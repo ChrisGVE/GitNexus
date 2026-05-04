@@ -95,10 +95,7 @@ describe('NodeWorkspaceExtractor', () => {
   });
 
   it('handles CommonJS destructured require', async () => {
-    await writeFile(
-      'lib/package.json',
-      JSON.stringify({ name: 'auth-lib', version: '1.0.0' }),
-    );
+    await writeFile('lib/package.json', JSON.stringify({ name: 'auth-lib', version: '1.0.0' }));
     await writeFile('lib/src/index.js', 'module.exports = { Authenticator: class {} };\n');
 
     await writeFile(
@@ -109,10 +106,7 @@ describe('NodeWorkspaceExtractor', () => {
         dependencies: { 'auth-lib': 'workspace:*' },
       }),
     );
-    await writeFile(
-      'svc/src/handler.js',
-      "const { Authenticator } = require('auth-lib');\n",
-    );
+    await writeFile('svc/src/handler.js', "const { Authenticator } = require('auth-lib');\n");
 
     const repos = { lib: 'auth-lib', svc: 'api-svc' };
     const repoPaths = new Map([
@@ -127,10 +121,7 @@ describe('NodeWorkspaceExtractor', () => {
   });
 
   it('handles scoped package imports with subpaths', async () => {
-    await writeFile(
-      'core/package.json',
-      JSON.stringify({ name: '@acme/core', version: '2.0.0' }),
-    );
+    await writeFile('core/package.json', JSON.stringify({ name: '@acme/core', version: '2.0.0' }));
     await writeFile('core/src/models.ts', 'export class User {}\n');
 
     await writeFile(
@@ -141,10 +132,7 @@ describe('NodeWorkspaceExtractor', () => {
         dependencies: { '@acme/core': 'workspace:*' },
       }),
     );
-    await writeFile(
-      'web/src/routes.ts',
-      "import { User } from '@acme/core/models';\n",
-    );
+    await writeFile('web/src/routes.ts', "import { User } from '@acme/core/models';\n");
 
     const repos = { core: '@acme/core', web: '@acme/web' };
     const repoPaths = new Map([
@@ -159,10 +147,7 @@ describe('NodeWorkspaceExtractor', () => {
   });
 
   it('ignores camelCase/snake_case imports (non-type exports)', async () => {
-    await writeFile(
-      'lib/package.json',
-      JSON.stringify({ name: 'utils', version: '1.0.0' }),
-    );
+    await writeFile('lib/package.json', JSON.stringify({ name: 'utils', version: '1.0.0' }));
     await writeFile('lib/src/index.ts', 'export function helper() {}\nexport class Formatter {}\n');
 
     await writeFile(
@@ -173,10 +158,7 @@ describe('NodeWorkspaceExtractor', () => {
         dependencies: { utils: 'workspace:*' },
       }),
     );
-    await writeFile(
-      'app/src/main.ts',
-      "import { helper, Formatter } from 'utils';\n",
-    );
+    await writeFile('app/src/main.ts', "import { helper, Formatter } from 'utils';\n");
 
     const repos = { lib: 'utils', app: 'myapp' };
     const repoPaths = new Map([
@@ -204,10 +186,7 @@ describe('NodeWorkspaceExtractor', () => {
   });
 
   it('deduplicates identical imports from multiple files', async () => {
-    await writeFile(
-      'lib/package.json',
-      JSON.stringify({ name: 'shared', version: '1.0.0' }),
-    );
+    await writeFile('lib/package.json', JSON.stringify({ name: 'shared', version: '1.0.0' }));
     await writeFile('lib/src/index.ts', 'export class Config {}\n');
 
     await writeFile(
@@ -233,10 +212,7 @@ describe('NodeWorkspaceExtractor', () => {
   });
 
   it('handles aliased imports (import { Foo as Bar })', async () => {
-    await writeFile(
-      'lib/package.json',
-      JSON.stringify({ name: 'models', version: '1.0.0' }),
-    );
+    await writeFile('lib/package.json', JSON.stringify({ name: 'models', version: '1.0.0' }));
     await writeFile('lib/src/index.ts', 'export class Entity {}\n');
 
     await writeFile(
@@ -247,10 +223,7 @@ describe('NodeWorkspaceExtractor', () => {
         dependencies: { models: 'workspace:*' },
       }),
     );
-    await writeFile(
-      'app/src/main.ts',
-      "import { Entity as BaseEntity } from 'models';\n",
-    );
+    await writeFile('app/src/main.ts', "import { Entity as BaseEntity } from 'models';\n");
 
     const repos = { lib: 'models', app: 'myapp' };
     const repoPaths = new Map([

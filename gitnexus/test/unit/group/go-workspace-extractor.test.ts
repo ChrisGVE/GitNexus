@@ -22,14 +22,8 @@ describe('GoWorkspaceExtractor', () => {
   }
 
   it('discovers cross-module type usage via require', async () => {
-    await writeFile(
-      'models/go.mod',
-      'module github.com/org/models\n\ngo 1.21\n',
-    );
-    await writeFile(
-      'models/schema.go',
-      'package models\n\ntype Schema struct {}\n',
-    );
+    await writeFile('models/go.mod', 'module github.com/org/models\n\ngo 1.21\n');
+    await writeFile('models/schema.go', 'package models\n\ntype Schema struct {}\n');
 
     await writeFile(
       'api/go.mod',
@@ -56,16 +50,13 @@ describe('GoWorkspaceExtractor', () => {
       from: 'libs/models',
       to: 'services/api',
       type: 'custom',
-      contract: 'models::Schema',
+      contract: 'github.com/org/models::Schema',
       role: 'provider',
     });
   });
 
   it('handles block require syntax', async () => {
-    await writeFile(
-      'auth/go.mod',
-      'module github.com/org/auth\n\ngo 1.21\n',
-    );
+    await writeFile('auth/go.mod', 'module github.com/org/auth\n\ngo 1.21\n');
     await writeFile('auth/token.go', 'package auth\n\ntype Token struct {}\n');
 
     await writeFile(
@@ -86,18 +77,12 @@ describe('GoWorkspaceExtractor', () => {
     const result = await extractGoWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('auth::Token');
+    expect(result.links[0].contract).toBe('github.com/org/auth::Token');
   });
 
   it('handles subpackage imports (module/pkg)', async () => {
-    await writeFile(
-      'core/go.mod',
-      'module github.com/org/core\n\ngo 1.21\n',
-    );
-    await writeFile(
-      'core/types/entity.go',
-      'package types\n\ntype Entity struct {}\n',
-    );
+    await writeFile('core/go.mod', 'module github.com/org/core\n\ngo 1.21\n');
+    await writeFile('core/types/entity.go', 'package types\n\ntype Entity struct {}\n');
 
     await writeFile(
       'app/go.mod',
@@ -117,14 +102,11 @@ describe('GoWorkspaceExtractor', () => {
     const result = await extractGoWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('core::Entity');
+    expect(result.links[0].contract).toBe('github.com/org/core::Entity');
   });
 
   it('handles replace directive with local paths', async () => {
-    await writeFile(
-      'lib/go.mod',
-      'module github.com/org/lib\n\ngo 1.21\n',
-    );
+    await writeFile('lib/go.mod', 'module github.com/org/lib\n\ngo 1.21\n');
     await writeFile('lib/config.go', 'package lib\n\ntype Config struct {}\n');
 
     await writeFile(
@@ -145,18 +127,12 @@ describe('GoWorkspaceExtractor', () => {
     const result = await extractGoWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('lib::Config');
+    expect(result.links[0].contract).toBe('github.com/org/lib::Config');
   });
 
   it('ignores unexported (lowercase) identifiers', async () => {
-    await writeFile(
-      'lib/go.mod',
-      'module github.com/org/lib\n\ngo 1.21\n',
-    );
-    await writeFile(
-      'lib/util.go',
-      'package lib\n\nfunc helper() {}\ntype Config struct {}\n',
-    );
+    await writeFile('lib/go.mod', 'module github.com/org/lib\n\ngo 1.21\n');
+    await writeFile('lib/util.go', 'package lib\n\nfunc helper() {}\ntype Config struct {}\n');
 
     await writeFile(
       'app/go.mod',
@@ -176,7 +152,31 @@ describe('GoWorkspaceExtractor', () => {
     const result = await extractGoWorkspaceLinks(repos, repoPaths);
 
     expect(result.links).toHaveLength(1);
-    expect(result.links[0].contract).toBe('lib::Config');
+    expect(result.links[0].contract).toBe('github.com/org/lib::Config');
+  });
+
+  it('does not produce links for aliased imports (V1 false-negative limitation)', async () => {
+    await writeFile('shared/go.mod', 'module github.com/org/shared\n\ngo 1.21\n');
+    await writeFile('shared/config.go', 'package shared\n\ntype Config struct {}\n');
+
+    await writeFile(
+      'app/go.mod',
+      'module github.com/org/app\n\ngo 1.21\n\nrequire github.com/org/shared v0.1.0\n',
+    );
+    await writeFile(
+      'app/main.go',
+      'package main\n\nimport cfg "github.com/org/shared"\n\nvar c cfg.Config\n',
+    );
+
+    const repos = { shared: 'shared', app: 'app' };
+    const repoPaths = new Map([
+      ['shared', path.join(tmpDir, 'shared')],
+      ['app', path.join(tmpDir, 'app')],
+    ]);
+
+    const result = await extractGoWorkspaceLinks(repos, repoPaths);
+
+    expect(result.links).toHaveLength(0);
   });
 
   it('skips repos without go.mod', async () => {
@@ -192,24 +192,15 @@ describe('GoWorkspaceExtractor', () => {
   });
 
   it('deduplicates identical type usage from multiple files', async () => {
-    await writeFile(
-      'lib/go.mod',
-      'module github.com/org/lib\n\ngo 1.21\n',
-    );
+    await writeFile('lib/go.mod', 'module github.com/org/lib\n\ngo 1.21\n');
     await writeFile('lib/model.go', 'package lib\n\ntype Model struct {}\n');
 
     await writeFile(
       'app/go.mod',
       'module github.com/org/app\n\ngo 1.21\n\nrequire github.com/org/lib v0.1.0\n',
     );
-    await writeFile(
-      'app/a.go',
-      'package main\n\nimport "github.com/org/lib"\n\nvar x lib.Model\n',
-    );
-    await writeFile(
-      'app/b.go',
-      'package main\n\nimport "github.com/org/lib"\n\nvar y lib.Model\n',
-    );
+    await writeFile('app/a.go', 'package main\n\nimport "github.com/org/lib"\n\nvar x lib.Model\n');
+    await writeFile('app/b.go', 'package main\n\nimport "github.com/org/lib"\n\nvar y lib.Model\n');
 
     const repos = { lib: 'lib', app: 'app' };
     const repoPaths = new Map([
@@ -223,10 +214,7 @@ describe('GoWorkspaceExtractor', () => {
   });
 
   it('discovers multiple types from the same module', async () => {
-    await writeFile(
-      'lib/go.mod',
-      'module github.com/org/lib\n\ngo 1.21\n',
-    );
+    await writeFile('lib/go.mod', 'module github.com/org/lib\n\ngo 1.21\n');
     await writeFile(
       'lib/types.go',
       'package lib\n\ntype Request struct {}\ntype Response struct {}\n',
@@ -251,6 +239,6 @@ describe('GoWorkspaceExtractor', () => {
 
     expect(result.links).toHaveLength(2);
     const contracts = result.links.map((l) => l.contract).sort();
-    expect(contracts).toEqual(['lib::Request', 'lib::Response']);
+    expect(contracts).toEqual(['github.com/org/lib::Request', 'github.com/org/lib::Response']);
   });
 });
