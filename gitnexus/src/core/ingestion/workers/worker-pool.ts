@@ -209,7 +209,11 @@ export const createWorkerPool = (
       const replaceWorker = async (workerIndex: number) => {
         const worker = workers[workerIndex];
         await worker?.terminate().catch(() => undefined);
-        if (!stopped) workers[workerIndex] = new Worker(workerUrl);
+        if (!stopped) {
+          const replacement = new Worker(workerUrl);
+          await new Promise<void>((resolve) => replacement.once('online', resolve));
+          workers[workerIndex] = replacement;
+        }
       };
 
       const fail = async (err: Error) => {
