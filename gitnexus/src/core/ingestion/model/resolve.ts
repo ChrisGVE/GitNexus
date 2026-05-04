@@ -196,7 +196,7 @@ export function c3Linearize(
         if (sequences[si][heads[si]] === head) {
           heads[si]++;
           remaining--;
-          // The element that was at heads[si] (now the new head) is no longer a tail
+          // promoted was in this sequence's active tail; now it's the new head — remove from tailCount
           if (heads[si] < sequences[si].length) {
             const promoted = sequences[si][heads[si]];
             const prev = tailCount.get(promoted)!;
