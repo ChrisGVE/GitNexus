@@ -94,6 +94,31 @@ export function resolveWorkerPoolOptions(
   };
 }
 
+function waitForWorkerOnline(worker: Worker): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const cleanup = () => {
+      worker.removeListener('online', onOnline);
+      worker.removeListener('error', onError);
+      worker.removeListener('exit', onExit);
+    };
+    const onOnline = () => {
+      cleanup();
+      resolve();
+    };
+    const onError = (err: Error) => {
+      cleanup();
+      reject(err);
+    };
+    const onExit = (code: number) => {
+      cleanup();
+      reject(new Error(`Replacement worker exited with code ${code} before coming online`));
+    };
+    worker.once('online', onOnline);
+    worker.once('error', onError);
+    worker.once('exit', onExit);
+  });
+}
+
 function estimateItemBytes(item: unknown): number {
   if (typeof item !== 'object' || item === null) return 0;
   const content = (item as { content?: unknown }).content;
@@ -209,11 +234,19 @@ export const createWorkerPool = (
       const replaceWorker = async (workerIndex: number) => {
         const worker = workers[workerIndex];
         await worker?.terminate().catch(() => undefined);
-        if (!stopped) {
-          const replacement = new Worker(workerUrl);
-          await new Promise<void>((resolve) => replacement.once('online', resolve));
-          workers[workerIndex] = replacement;
+        if (stopped) return;
+        const replacement = new Worker(workerUrl);
+        try {
+          await waitForWorkerOnline(replacement);
+        } catch {
+          await replacement.terminate().catch(() => undefined);
+          throw new Error(`Replacement worker ${workerIndex} failed to start`);
         }
+        if (stopped) {
+          await replacement.terminate().catch(() => undefined);
+          return;
+        }
+        workers[workerIndex] = replacement;
       };
 
       const fail = async (err: Error) => {
@@ -340,7 +373,12 @@ export const createWorkerPool = (
               inFlightProgress[workerIndex] = 0;
               const shouldContinue = requeueAfterTimeout(workerIndex, job, lastProgress);
               if (!shouldContinue) return;
-              await replaceWorker(workerIndex);
+              try {
+                await replaceWorker(workerIndex);
+              } catch (err) {
+                void fail(err instanceof Error ? err : new Error(String(err)));
+                return;
+              }
               reportProgress();
               runWorker(workerIndex);
               maybeDone();
