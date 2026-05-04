@@ -43,7 +43,7 @@ async function parsePythonManifest(
 function parsePyproject(
   content: string,
 ): { name: string; importName: string; deps: string[] } | null {
-  const nameMatch = content.match(/^\[project\]\s*\n(?:[^\[]*?\n)*?name\s*=\s*"([^"]+)"/m);
+  const nameMatch = content.match(/^\[project\]\s*\n(?:[^\n\[]*\n)*?name\s*=\s*"([^"]+)"/m);
   if (!nameMatch) return null;
   const name = nameMatch[1];
   const importName = name.replace(/-/g, '_');
