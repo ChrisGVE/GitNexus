@@ -235,6 +235,9 @@ export async function extractElixirWorkspaceLinks(
       if (seen.has(key)) continue;
       seen.add(key);
 
+      // V1: Elixir contracts use the full module name (e.g. "Core.Schema") without
+      // an "appName::" prefix. resolveSymbol will query the graph with this full
+      // string — resolution depends on Elixir indexer storing fully-qualified names.
       const link: GroupManifestLink = {
         from: providerApp.groupPath,
         to: app.groupPath,

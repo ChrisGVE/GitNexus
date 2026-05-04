@@ -155,6 +155,30 @@ describe('GoWorkspaceExtractor', () => {
     expect(result.links[0].contract).toBe('github.com/org/lib::Config');
   });
 
+  it('does not produce links for aliased imports (V1 false-negative limitation)', async () => {
+    await writeFile('shared/go.mod', 'module github.com/org/shared\n\ngo 1.21\n');
+    await writeFile('shared/config.go', 'package shared\n\ntype Config struct {}\n');
+
+    await writeFile(
+      'app/go.mod',
+      'module github.com/org/app\n\ngo 1.21\n\nrequire github.com/org/shared v0.1.0\n',
+    );
+    await writeFile(
+      'app/main.go',
+      'package main\n\nimport cfg "github.com/org/shared"\n\nvar c cfg.Config\n',
+    );
+
+    const repos = { shared: 'shared', app: 'app' };
+    const repoPaths = new Map([
+      ['shared', path.join(tmpDir, 'shared')],
+      ['app', path.join(tmpDir, 'app')],
+    ]);
+
+    const result = await extractGoWorkspaceLinks(repos, repoPaths);
+
+    expect(result.links).toHaveLength(0);
+  });
+
   it('skips repos without go.mod', async () => {
     await writeFile('js-app/package.json', '{"name": "js-app"}');
 
