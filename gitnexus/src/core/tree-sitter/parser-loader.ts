@@ -213,6 +213,12 @@ const SOURCES: Record<string, GrammarSource> = {
       '`gitnexus/vendor/tree-sitter-erlang` and reference it as ' +
       '`"tree-sitter-erlang": "file:./vendor/tree-sitter-erlang"` in package.json ' +
       'to enable Erlang support.',
+  [SupportedLanguages.Elixir]: {
+    load: () => _require('tree-sitter-elixir'),
+    optional: true,
+    unavailableNote:
+      'Elixir parsing disabled: `tree-sitter-elixir` is an optionalDependency ' +
+      'and is not installed (or its native binding failed to build).',
   },
 };
 

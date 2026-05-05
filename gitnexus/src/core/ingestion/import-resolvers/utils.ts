@@ -64,6 +64,9 @@ export const EXTENSIONS = [
   // Haskell
   '.hs',
   '.lhs',
+  // Elixir
+  '.ex',
+  '.exs',
 ];
 
 /**

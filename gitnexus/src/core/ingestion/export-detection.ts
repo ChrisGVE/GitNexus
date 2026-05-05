@@ -244,6 +244,30 @@ export const swiftExportChecker: ExportChecker = (node, _name) => {
 /** Ruby: all top-level definitions are public (no export syntax). */
 export const rubyExportChecker: ExportChecker = (_node, _name) => true;
 
+/**
+ * Elixir: `def` is public, `defp` is private.
+ * Walk ancestors looking for the enclosing macro call target.
+ * If the direct definition call uses `defp` / `defmacrop` / `defguardp`,
+ * the function is private; everything else is public.
+ */
+export const elixirExportChecker: ExportChecker = (node, _name) => {
+  // The @name capture is the identifier inside the argument call.
+  // Walk up: identifier → call (function name) → arguments → outer call (def/defp).
+  let current: SyntaxNode | null = node;
+  while (current) {
+    if (current.type === 'call') {
+      const target = current.childForFieldName?.('target');
+      if (target?.type === 'identifier') {
+        const kw = target.text;
+        if (kw === 'defp' || kw === 'defmacrop' || kw === 'defguardp') return false;
+        if (kw === 'def' || kw === 'defmacro' || kw === 'defguard') return true;
+      }
+    }
+    current = current.parent;
+  }
+  return true; // defmodule / defprotocol and module-level items are public
+};
+
 /** Dart: public if no leading underscore (convention, same as Python). */
 export const dartExportChecker: ExportChecker = (_node, name) => !name.startsWith('_');
 

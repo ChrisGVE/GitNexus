@@ -49,6 +49,7 @@ const EXTENSION_MAP: Record<SupportedLanguages, readonly string[]> = {
   [SupportedLanguages.OCaml]: ['.ml', '.mli'],
   [SupportedLanguages.Haskell]: ['.hs', '.lhs'],
   [SupportedLanguages.Erlang]: ['.erl', '.hrl'],
+  [SupportedLanguages.Elixir]: ['.ex', '.exs'],
   [SupportedLanguages.Cobol]: ['.cbl', '.cob', '.cpy', '.cobol'],
 } satisfies Record<SupportedLanguages, readonly string[]>; // Ensure exhaustiveness
 
@@ -114,6 +115,7 @@ const SYNTAX_MAP: Record<SupportedLanguages, string> = {
   [SupportedLanguages.OCaml]: 'ocaml',
   [SupportedLanguages.Haskell]: 'haskell',
   [SupportedLanguages.Erlang]: 'erlang',
+  [SupportedLanguages.Elixir]: 'elixir',
   [SupportedLanguages.Cobol]: 'cobol',
 } satisfies Record<SupportedLanguages, string>; // Ensure exhaustiveness
 

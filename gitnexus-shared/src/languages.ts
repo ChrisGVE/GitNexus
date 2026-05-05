@@ -27,6 +27,7 @@ export enum SupportedLanguages {
   OCaml = 'ocaml',
   Haskell = 'haskell',
   Erlang = 'erlang',
+  Elixir = 'elixir',
   /** Standalone regex processor — no tree-sitter, no LanguageProvider. */
   Cobol = 'cobol',
 }

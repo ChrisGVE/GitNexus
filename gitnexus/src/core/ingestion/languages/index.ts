@@ -32,6 +32,7 @@ import { ocamlProvider } from './ocaml.js';
 import { haskellProvider } from './haskell.js';
 import { erlangProvider } from './erlang.js';
 import { cobolProvider } from './cobol.js';
+import { elixirProvider } from './elixir.js';
 
 export const providers = {
   [SupportedLanguages.JavaScript]: javascriptProvider,
@@ -56,6 +57,7 @@ export const providers = {
   [SupportedLanguages.OCaml]: ocamlProvider,
   [SupportedLanguages.Haskell]: haskellProvider,
   [SupportedLanguages.Erlang]: erlangProvider,
+  [SupportedLanguages.Elixir]: elixirProvider,
   [SupportedLanguages.Cobol]: cobolProvider,
 } satisfies Record<SupportedLanguages, LanguageProvider>;
 
