@@ -47,6 +47,9 @@ export const EXTENSIONS = [
   '.swift',
   // Ruby
   '.rb',
+  // OCaml
+  '.ml',
+  '.mli',
 ];
 
 /**

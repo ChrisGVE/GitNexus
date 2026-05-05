@@ -1481,6 +1481,47 @@ export const DART_QUERIES = `
       (type_identifier) @heritage.trait))) @heritage
 `;
 
+// OCaml queries - works with tree-sitter-ocaml
+// value_definition wraps let_binding nodes (the binding's pattern field contains the name).
+// module_definition wraps module_binding nodes (module_name child contains the name).
+// open_module's module field is the module expression (a module_type_path or value_path).
+// type_definition wraps type_binding nodes (name field = type_constructor).
+// application_expression wraps function application (function + argument fields).
+export const OCAML_QUERIES = `
+; ── Top-level let bindings (functions and values) ────────────────────────────
+; value_definition > let_binding > pattern field > value_name
+(value_definition
+  (let_binding
+    pattern: (value_name) @name)) @definition.function
+
+; ── Module definitions ────────────────────────────────────────────────────────
+(module_definition
+  (module_binding
+    (module_name) @name)) @definition.class
+
+; ── Type definitions ──────────────────────────────────────────────────────────
+(type_definition
+  (type_binding
+    name: (type_constructor) @name)) @definition.class
+
+; ── Open statements (imports) ────────────────────────────────────────────────
+(open_module
+  module: (_) @import.source) @import
+
+; ── Function application calls ───────────────────────────────────────────────
+; Direct application: f arg1 arg2  →  application_expression.function = value_path
+(application_expression
+  function: (value_path
+    (value_name) @call.name)) @call
+
+; Qualified application: Module.f arg  →  application_expression.function = value_path with module_path
+(application_expression
+  function: (value_path
+    (module_path)
+    (value_name) @call.name)) @call
+
+`;
+
 import { SupportedLanguages } from 'gitnexus-shared';
 
 export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
@@ -1499,5 +1540,6 @@ export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
   [SupportedLanguages.Swift]: SWIFT_QUERIES,
   [SupportedLanguages.Dart]: DART_QUERIES,
   [SupportedLanguages.Vue]: TYPESCRIPT_QUERIES, // Vue <script> blocks are parsed as TypeScript
+  [SupportedLanguages.OCaml]: OCAML_QUERIES,
   [SupportedLanguages.Cobol]: '', // Standalone regex processor — no tree-sitter queries
 };

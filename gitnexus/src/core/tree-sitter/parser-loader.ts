@@ -160,6 +160,18 @@ const SOURCES: Record<string, GrammarSource> = {
       'Kotlin parsing disabled: `tree-sitter-kotlin` is an optionalDependency ' +
       'and is not installed (or its native binding failed to build).',
   },
+  [SupportedLanguages.OCaml]: {
+    load: () => {
+      const mod = _require('tree-sitter-ocaml');
+      return mod.ocaml;
+    },
+    optional: true,
+    severity: 'error',
+    unavailableNote:
+      'OCaml parsing disabled: `tree-sitter-ocaml` could not be loaded. ' +
+      'This package is in `dependencies` and prebuilds ship for all supported ' +
+      'platforms. Try `npm rebuild tree-sitter-ocaml` or reinstalling.',
+  },
 };
 
 type LoadResult =

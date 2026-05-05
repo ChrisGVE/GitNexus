@@ -246,3 +246,10 @@ export const rubyExportChecker: ExportChecker = (_node, _name) => true;
 
 /** Dart: public if no leading underscore (convention, same as Python). */
 export const dartExportChecker: ExportChecker = (_node, name) => !name.startsWith('_');
+
+/**
+ * OCaml: all top-level let bindings and module definitions are public by default.
+ * The .mli interface file controls visibility, but at the syntactic level in .ml
+ * files all bindings are accessible from other modules.
+ */
+export const ocamlExportChecker: ExportChecker = (_node, _name) => true;
