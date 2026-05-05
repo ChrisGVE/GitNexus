@@ -1610,6 +1610,8 @@ export const SCALA_QUERIES = `
   left: (field_expression
     value: (_) @assignment.receiver
     field: (identifier) @assignment.property)) @assignment
+`;
+
 // Zig queries — verified against tree-sitter-zig 0.2.0 node types
 // Key node types:
 //   function_declaration  — name: (identifier), parameters, return, body
@@ -1654,6 +1656,8 @@ export const ZIG_QUERIES = `
 (call_expression
   function: (field_expression
     field: (field_identifier) @call.name)) @call
+`;
+
 // OCaml queries - works with tree-sitter-ocaml
 // value_definition wraps let_binding nodes (the binding's pattern field contains the name).
 // module_definition wraps module_binding nodes (module_name child contains the name).
@@ -1692,6 +1696,7 @@ export const OCAML_QUERIES = `
   function: (value_path
     (module_path)
     (value_name) @call.name)) @call
+`;
 
 // Haskell queries - works with tree-sitter-haskell (^0.23.1)
 //
@@ -1772,6 +1777,8 @@ export const HASKELL_QUERIES = `
 ; Infix expressions use infix nodes; the callee may be a variable or operator
 (infix
   (variable) @call.name) @call
+`;
+
 // Erlang queries — targets WhatsApp/tree-sitter-erlang grammar.
 // Grammar unavailable at install time (npm placeholder); these queries are
 // aspirational and structurally correct for use once the grammar is vendored.
@@ -1825,6 +1832,8 @@ export const ERLANG_QUERIES = `
 (spec_attribute
   (spec_fun
     (atom) @name)) @definition.spec
+`;
+
 // Elixir queries — works with tree-sitter-elixir
 //
 // Elixir's grammar represents ALL language constructs as `call` nodes
@@ -1909,6 +1918,8 @@ export const ELIXIR_QUERIES = `
       right: (identifier) @assignment.property))
   operator: "="
   right: (_)) @assignment
+`;
+
 // Perl queries — works with tree-sitter-perl ^1.0.0 (veesh/tree-sitter-perl)
 // NOTE: tree-sitter-perl ^1.0.0 requires tree-sitter ^0.22.0 which is ABI-incompatible
 // with the runtime tree-sitter ^0.21.1. Perl is registered as an optionalDependency
@@ -1941,6 +1952,8 @@ export const PERL_QUERIES = `
 ; ── Variable declarations: my $var; my @arr; my %hash; our $var; ─────────────
 (variable_declaration
   variable: (_) @name) @definition.variable
+`;
+
 // SQL queries — verified against tree-sitter-sql@0.1.0 nodeTypeInfo.
 // The grammar is aspirational: the 0.1.0 package has no native binding,
 // so these queries are prepared for a future compatible release.

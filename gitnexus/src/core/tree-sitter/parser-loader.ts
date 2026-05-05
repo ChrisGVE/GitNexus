@@ -194,6 +194,7 @@ const SOURCES: Record<string, GrammarSource> = {
       'Zig parsing disabled: `tree-sitter-zig` is an optionalDependency ' +
       'and is not installed (or its native binding failed to build). ' +
       'Install `tree-sitter-zig` and rebuild native bindings to enable Zig analysis.',
+  },
   [SupportedLanguages.OCaml]: {
     load: () => {
       const mod = _require('tree-sitter-ocaml');
@@ -205,9 +206,11 @@ const SOURCES: Record<string, GrammarSource> = {
       'OCaml parsing disabled: `tree-sitter-ocaml` could not be loaded. ' +
       'This package is in `dependencies` and prebuilds ship for all supported ' +
       'platforms. Try `npm rebuild tree-sitter-ocaml` or reinstalling.',
+  },
   [SupportedLanguages.Haskell]: {
     load: () => _require('tree-sitter-haskell'),
     unavailableNote: 'Haskell parsing requires `tree-sitter-haskell`.',
+  },
 
   // The `tree-sitter-erlang` npm package (0.0.1-security) is a security
   // placeholder and does NOT contain a real grammar.  The real grammar lives at
@@ -225,12 +228,14 @@ const SOURCES: Record<string, GrammarSource> = {
       '`gitnexus/vendor/tree-sitter-erlang` and reference it as ' +
       '`"tree-sitter-erlang": "file:./vendor/tree-sitter-erlang"` in package.json ' +
       'to enable Erlang support.',
+  },
   [SupportedLanguages.Elixir]: {
     load: () => _require('tree-sitter-elixir'),
     optional: true,
     unavailableNote:
       'Elixir parsing disabled: `tree-sitter-elixir` is an optionalDependency ' +
       'and is not installed (or its native binding failed to build).',
+  },
   [SupportedLanguages.Perl]: {
     load: () => _require('tree-sitter-perl'),
     optional: true,
