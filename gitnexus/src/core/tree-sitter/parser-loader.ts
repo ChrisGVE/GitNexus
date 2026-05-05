@@ -219,6 +219,13 @@ const SOURCES: Record<string, GrammarSource> = {
     unavailableNote:
       'Elixir parsing disabled: `tree-sitter-elixir` is an optionalDependency ' +
       'and is not installed (or its native binding failed to build).',
+  [SupportedLanguages.Perl]: {
+    load: () => _require('tree-sitter-perl'),
+    optional: true,
+    unavailableNote:
+      'Perl parsing disabled: `tree-sitter-perl` is an optionalDependency. ' +
+      'It requires tree-sitter ^0.22.0; the current runtime uses ^0.21.1, ' +
+      'which is ABI-incompatible with the grammar. Perl files will be skipped.',
   },
 };
 

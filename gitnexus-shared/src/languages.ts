@@ -28,6 +28,7 @@ export enum SupportedLanguages {
   Haskell = 'haskell',
   Erlang = 'erlang',
   Elixir = 'elixir',
+  Perl = 'perl',
   /** Standalone regex processor — no tree-sitter, no LanguageProvider. */
   Cobol = 'cobol',
 }

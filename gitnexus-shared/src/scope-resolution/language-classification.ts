@@ -48,6 +48,7 @@ export const LanguageClassifications: Readonly<Record<SupportedLanguages, Langua
     [SupportedLanguages.Haskell]: 'experimental',
     [SupportedLanguages.Erlang]: 'experimental',
     [SupportedLanguages.Elixir]: 'experimental',
+    [SupportedLanguages.Perl]: 'experimental',
     [SupportedLanguages.Cobol]: 'experimental',
   };
 

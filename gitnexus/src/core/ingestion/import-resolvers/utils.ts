@@ -67,6 +67,10 @@ export const EXTENSIONS = [
   // Elixir
   '.ex',
   '.exs',
+  // Perl
+  '.pl',
+  '.pm',
+  '.t',
 ];
 
 /**

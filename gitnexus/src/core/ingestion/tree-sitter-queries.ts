@@ -1909,6 +1909,38 @@ export const ELIXIR_QUERIES = `
       right: (identifier) @assignment.property))
   operator: "="
   right: (_)) @assignment
+// Perl queries — works with tree-sitter-perl ^1.0.0 (veesh/tree-sitter-perl)
+// NOTE: tree-sitter-perl ^1.0.0 requires tree-sitter ^0.22.0 which is ABI-incompatible
+// with the runtime tree-sitter ^0.21.1. Perl is registered as an optionalDependency
+// and will be skipped gracefully when the grammar cannot be loaded.
+export const PERL_QUERIES = `
+; ── Subroutine declarations: sub name { ... } ────────────────────────────────
+(subroutine_declaration_statement
+  name: (bareword) @name) @definition.function
+
+; ── Package declarations: package Name; ─────────────────────────────────────
+(package_statement
+  name: (package) @name) @definition.module
+
+; ── use imports: use Module; use Module qw(...); ─────────────────────────────
+(use_statement
+  module: (package) @import.path) @import
+
+; ── require imports: require "file.pm"; require Module; ──────────────────────
+(require_expression
+  (bareword) @import.path) @import
+
+; ── Function calls: func(...) ────────────────────────────────────────────────
+(function_call_expression
+  function: (function) @call.name) @call
+
+; ── Method calls: $obj->method(...) or Class->method(...) ────────────────────
+(method_call_expression
+  method: (method) @call.name) @call
+
+; ── Variable declarations: my $var; my @arr; my %hash; our $var; ─────────────
+(variable_declaration
+  variable: (_) @name) @definition.variable
 `;
 
 import { SupportedLanguages } from 'gitnexus-shared';
@@ -1937,5 +1969,6 @@ export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
   [SupportedLanguages.Haskell]: HASKELL_QUERIES,
   [SupportedLanguages.Erlang]: ERLANG_QUERIES,
   [SupportedLanguages.Elixir]: ELIXIR_QUERIES,
+  [SupportedLanguages.Perl]: PERL_QUERIES,
   [SupportedLanguages.Cobol]: '', // Standalone regex processor — no tree-sitter queries
 };

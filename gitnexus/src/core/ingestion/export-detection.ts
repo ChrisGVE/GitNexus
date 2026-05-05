@@ -370,3 +370,11 @@ export const erlangExportChecker: ExportChecker = (node, name) => {
   }
   return false;
 };
+/**
+ * Perl: all package-level subroutines are public by convention.
+ * Subroutines prefixed with `_` are conventionally private, but they
+ * remain accessible from outside the package (Perl has no access control).
+ * We treat everything as exported since callers in other packages can always
+ * call any subroutine.
+ */
+export const perlExportChecker: ExportChecker = (_node, _name) => true;
