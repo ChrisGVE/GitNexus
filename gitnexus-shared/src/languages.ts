@@ -20,6 +20,8 @@ export enum SupportedLanguages {
   Swift = 'swift',
   Dart = 'dart',
   Vue = 'vue',
+  /** Experimental generic SQL provider — tree-sitter grammar optional. */
+  SQL = 'sql',
   /** Standalone regex processor — no tree-sitter, no LanguageProvider. */
   Cobol = 'cobol',
 }

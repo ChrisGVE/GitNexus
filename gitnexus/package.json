@@ -92,6 +92,7 @@
     "tree-sitter-dart": "file:./vendor/tree-sitter-dart",
     "tree-sitter-kotlin": "^0.3.8",
     "tree-sitter-proto": "file:./vendor/tree-sitter-proto",
+    "tree-sitter-sql": "^0.1.0",
     "tree-sitter-swift": "file:./vendor/tree-sitter-swift"
   },
   "devDependencies": {
