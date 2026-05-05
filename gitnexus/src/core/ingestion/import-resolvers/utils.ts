@@ -56,6 +56,8 @@ export const EXTENSIONS = [
   // Scala
   '.scala',
   '.sc',
+  // Zig
+  '.zig',
 ];
 
 /**

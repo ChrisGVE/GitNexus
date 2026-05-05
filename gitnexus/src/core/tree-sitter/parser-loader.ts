@@ -175,6 +175,14 @@ const SOURCES: Record<string, GrammarSource> = {
     unavailableNote:
       'Lua parsing requires `tree-sitter-lua`. Check the install and native binding.',
   },
+  [SupportedLanguages.Zig]: {
+    load: () => _require('tree-sitter-zig'),
+    optional: true,
+    unavailableNote:
+      'Zig parsing disabled: `tree-sitter-zig` is an optionalDependency ' +
+      'and is not installed (or its native binding failed to build). ' +
+      'Install `tree-sitter-zig` and rebuild native bindings to enable Zig analysis.',
+  },
 };
 
 type LoadResult =

@@ -275,3 +275,27 @@ export const scalaExportChecker: ExportChecker = (node, _name) => {
   }
   return true;
 };
+
+/**
+ * Zig: a symbol is exported when it has a `pub` visibility_modifier.
+ * Walk up to the declaration node and check its direct children.
+ * All definitions without `pub` are private (file-scoped).
+ */
+export const zigExportChecker: ExportChecker = (node, _name) => {
+  let current: SyntaxNode | null = node;
+  while (current) {
+    for (let i = 0; i < current.childCount; i++) {
+      const child = current.child(i);
+      if (child?.type === 'visibility_modifier' && child.text === 'pub') return true;
+    }
+    if (
+      current.type === 'function_declaration' ||
+      current.type === 'assignment_statement' ||
+      current.type === 'source_file'
+    ) {
+      break;
+    }
+    current = current.parent;
+  }
+  return false;
+};

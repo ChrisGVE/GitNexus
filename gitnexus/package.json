@@ -94,7 +94,8 @@
     "tree-sitter-dart": "file:./vendor/tree-sitter-dart",
     "tree-sitter-kotlin": "^0.3.8",
     "tree-sitter-proto": "file:./vendor/tree-sitter-proto",
-    "tree-sitter-swift": "file:./vendor/tree-sitter-swift"
+    "tree-sitter-swift": "file:./vendor/tree-sitter-swift",
+    "tree-sitter-zig": "^0.2.0"
   },
   "devDependencies": {
     "@types/cli-progress": "^3.11.6",

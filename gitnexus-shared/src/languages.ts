@@ -23,6 +23,7 @@ export enum SupportedLanguages {
   Bash = 'bash',
   Lua = 'lua',
   Scala = 'scala',
+  Zig = 'zig',
   /** Standalone regex processor — no tree-sitter, no LanguageProvider. */
   Cobol = 'cobol',
 }

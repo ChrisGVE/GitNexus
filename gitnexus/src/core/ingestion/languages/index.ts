@@ -27,6 +27,7 @@ import { vueProvider } from './vue.js';
 import { bashProvider } from './bash.js';
 import { luaProvider } from './lua.js';
 import { scalaProvider } from './scala.js';
+import { zigProvider } from './zig.js';
 import { cobolProvider } from './cobol.js';
 
 export const providers = {
@@ -48,6 +49,7 @@ export const providers = {
   [SupportedLanguages.Lua]: luaProvider,
   [SupportedLanguages.Scala]: scalaProvider,
   [SupportedLanguages.Vue]: vueProvider,
+  [SupportedLanguages.Zig]: zigProvider,
   [SupportedLanguages.Cobol]: cobolProvider,
 } satisfies Record<SupportedLanguages, LanguageProvider>;
 
