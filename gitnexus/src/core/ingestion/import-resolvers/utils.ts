@@ -61,6 +61,9 @@ export const EXTENSIONS = [
   // OCaml
   '.ml',
   '.mli',
+  // Haskell
+  '.hs',
+  '.lhs',
 ];
 
 /**

@@ -1693,6 +1693,85 @@ export const OCAML_QUERIES = `
     (module_path)
     (value_name) @call.name)) @call
 
+// Haskell queries - works with tree-sitter-haskell (^0.23.1)
+//
+// Haskell AST key nodes:
+//   declarations    - top-level container for all declarations
+//   function        - top-level function definition (variable + patterns + match)
+//   bind            - do-notation binding (variable = expr)
+//   signature       - type signature  (variable :: Type)
+//   data_type       - data declaration (data Name = ...)
+//   newtype         - newtype declaration (newtype Name = ...)
+//   type_synomym    - type synonym (type Name = ...)
+//   class           - type class declaration
+//   instance        - type class instance
+//   import          - import declaration (child of `imports` node)
+//   apply           - function application (callee arg1 arg2 ...)
+export const HASKELL_QUERIES = `
+; ── Top-level function definitions ───────────────────────────────────────────
+; function nodes: variable patterns... match
+(declarations
+  (function
+    (variable) @name) @definition.function)
+
+; do-notation bindings at top level are treated as function definitions
+(declarations
+  (bind
+    (variable) @name) @definition.function)
+
+; ── Data type declarations ────────────────────────────────────────────────────
+(declarations
+  (data_type
+    (name) @name) @definition.class)
+
+; ── Newtype declarations ──────────────────────────────────────────────────────
+(declarations
+  (newtype
+    (name) @name) @definition.class)
+
+; ── Type synonym declarations ─────────────────────────────────────────────────
+(declarations
+  (type_synomym
+    (name) @name) @definition.type)
+
+; ── Type class declarations ───────────────────────────────────────────────────
+(declarations
+  (class
+    (name) @name) @definition.interface)
+
+; ── Type class instances ──────────────────────────────────────────────────────
+(declarations
+  (instance
+    (name) @name) @definition.class)
+
+; ── Methods inside class declarations ────────────────────────────────────────
+; Field name is "declarations" on class node; child node type is class_declarations
+(class
+  declarations: (class_declarations
+    (signature
+      (variable) @name) @definition.method))
+
+; ── Methods inside instance declarations ─────────────────────────────────────
+; Field name is "declarations" on instance node; child node type is instance_declarations
+(instance
+  declarations: (instance_declarations
+    (function
+      (variable) @name) @definition.method))
+
+; ── Import declarations ───────────────────────────────────────────────────────
+(imports
+  (import
+    (module) @import.source) @import)
+
+; ── Function application calls ────────────────────────────────────────────────
+; apply nodes: the first child is the function being called
+(apply
+  (variable) @call.name) @call
+
+; ── Infix operator calls (e.g. map f xs) ─────────────────────────────────────
+; Infix expressions use infix nodes; the callee may be a variable or operator
+(infix
+  (variable) @call.name) @call
 `;
 
 import { SupportedLanguages } from 'gitnexus-shared';
@@ -1718,5 +1797,6 @@ export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
   [SupportedLanguages.Vue]: TYPESCRIPT_QUERIES, // Vue <script> blocks are parsed as TypeScript
   [SupportedLanguages.Zig]: ZIG_QUERIES,
   [SupportedLanguages.OCaml]: OCAML_QUERIES,
+  [SupportedLanguages.Haskell]: HASKELL_QUERIES,
   [SupportedLanguages.Cobol]: '', // Standalone regex processor — no tree-sitter queries
 };

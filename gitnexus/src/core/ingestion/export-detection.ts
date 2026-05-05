@@ -305,3 +305,10 @@ export const zigExportChecker: ExportChecker = (node, _name) => {
  * files all bindings are accessible from other modules.
  */
 export const ocamlExportChecker: ExportChecker = (_node, _name) => true;
+/**
+ * Haskell: all top-level bindings are publicly visible by default.
+ * The module export list (explicitly declared exports) controls what is
+ * exported, but GitNexus treats all definitions as public for graph
+ * construction purposes (conservative — matches Kotlin/Go approach).
+ */
+export const haskellExportChecker: ExportChecker = (_node, _name) => true;

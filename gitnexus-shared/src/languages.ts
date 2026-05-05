@@ -25,6 +25,7 @@ export enum SupportedLanguages {
   Scala = 'scala',
   Zig = 'zig',
   OCaml = 'ocaml',
+  Haskell = 'haskell',
   /** Standalone regex processor — no tree-sitter, no LanguageProvider. */
   Cobol = 'cobol',
 }

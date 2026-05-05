@@ -193,6 +193,9 @@ const SOURCES: Record<string, GrammarSource> = {
       'OCaml parsing disabled: `tree-sitter-ocaml` could not be loaded. ' +
       'This package is in `dependencies` and prebuilds ship for all supported ' +
       'platforms. Try `npm rebuild tree-sitter-ocaml` or reinstalling.',
+  [SupportedLanguages.Haskell]: {
+    load: () => _require('tree-sitter-haskell'),
+    unavailableNote: 'Haskell parsing requires `tree-sitter-haskell`.',
   },
 };
 
