@@ -160,6 +160,24 @@ const SOURCES: Record<string, GrammarSource> = {
       'Kotlin parsing disabled: `tree-sitter-kotlin` is an optionalDependency ' +
       'and is not installed (or its native binding failed to build).',
   },
+
+  // The `tree-sitter-erlang` npm package (0.0.1-security) is a security
+  // placeholder and does NOT contain a real grammar.  The real grammar lives at
+  // https://github.com/WhatsApp/tree-sitter-erlang and must be vendored under
+  // `gitnexus/vendor/tree-sitter-erlang` before Erlang parsing becomes
+  // available.  Until then this entry marks the language as optional so the
+  // pipeline registers it but skips `.erl`/`.hrl` files gracefully.
+  [SupportedLanguages.Erlang]: {
+    load: () => _require('tree-sitter-erlang'),
+    optional: true,
+    unavailableNote:
+      'Erlang parsing disabled: `tree-sitter-erlang` npm package is a security ' +
+      'placeholder (0.0.1-security). Vendor the real grammar from ' +
+      'https://github.com/WhatsApp/tree-sitter-erlang under ' +
+      '`gitnexus/vendor/tree-sitter-erlang` and reference it as ' +
+      '`"tree-sitter-erlang": "file:./vendor/tree-sitter-erlang"` in package.json ' +
+      'to enable Erlang support.',
+  },
 };
 
 type LoadResult =

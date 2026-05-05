@@ -1481,6 +1481,61 @@ export const DART_QUERIES = `
       (type_identifier) @heritage.trait))) @heritage
 `;
 
+// Erlang queries — targets WhatsApp/tree-sitter-erlang grammar.
+// Grammar unavailable at install time (npm placeholder); these queries are
+// aspirational and structurally correct for use once the grammar is vendored.
+//
+// Key Erlang AST node types (tree-sitter-erlang):
+//   - source_file: top-level container
+//   - module_attribute:  -module(name).
+//   - export_attribute:  -export([func/arity, ...]).
+//   - import_attribute:  (rare; not standard Erlang)
+//   - function:          name(Args) -> Body.
+//   - function_clause:   name(Pattern) when Guard -> Body
+//   - spec_attribute:    -spec name/arity :: type().
+//   - record_attribute:  -record(name, {fields}).
+//   - behaviour_attribute: -behaviour(gen_server). / -behavior(gen_server).
+//   - call:              M:F(Args) or F(Args)
+export const ERLANG_QUERIES = `
+; ── Module attribute (-module(name).) ────────────────────────────────────────
+(module_attribute
+  (atom) @name) @definition.module
+
+; ── Function definitions ─────────────────────────────────────────────────────
+(function
+  (atom) @name) @definition.function
+
+; ── Record definitions (-record(name, {fields}).) ────────────────────────────
+(record_attribute
+  (atom) @name) @definition.class
+
+; ── Export attribute (-export([func/arity]).) ────────────────────────────────
+(export_attribute
+  (export_list
+    (export_entry
+      (atom) @name))) @export
+
+; ── Remote calls: Module:Function(Args) ──────────────────────────────────────
+(call
+  target: (remote
+    module: (atom) @call.receiver
+    function: (atom) @call.name)) @call
+
+; ── Local calls: Function(Args) ──────────────────────────────────────────────
+(call
+  target: (atom) @call.name) @call
+
+; ── Behaviour declarations (-behaviour(gen_server).) ─────────────────────────
+(behaviour_attribute
+  (atom) @heritage.class
+  (atom) @heritage.implements) @heritage.impl
+
+; ── Spec declarations (-spec name/arity :: type.) ────────────────────────────
+(spec_attribute
+  (spec_fun
+    (atom) @name)) @definition.spec
+`;
+
 import { SupportedLanguages } from 'gitnexus-shared';
 
 export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
@@ -1499,5 +1554,6 @@ export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
   [SupportedLanguages.Swift]: SWIFT_QUERIES,
   [SupportedLanguages.Dart]: DART_QUERIES,
   [SupportedLanguages.Vue]: TYPESCRIPT_QUERIES, // Vue <script> blocks are parsed as TypeScript
+  [SupportedLanguages.Erlang]: ERLANG_QUERIES,
   [SupportedLanguages.Cobol]: '', // Standalone regex processor — no tree-sitter queries
 };
