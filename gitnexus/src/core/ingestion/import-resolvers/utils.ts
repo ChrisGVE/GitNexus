@@ -47,6 +47,9 @@ export const EXTENSIONS = [
   '.swift',
   // Ruby
   '.rb',
+  // Elixir
+  '.ex',
+  '.exs',
 ];
 
 /**

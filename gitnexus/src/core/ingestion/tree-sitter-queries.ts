@@ -1481,6 +1481,92 @@ export const DART_QUERIES = `
       (type_identifier) @heritage.trait))) @heritage
 `;
 
+// Elixir queries — works with tree-sitter-elixir
+//
+// Elixir's grammar represents ALL language constructs as `call` nodes
+// with an `identifier` target whose text is the macro/function name.
+//
+// Key patterns:
+//   defmodule  target=identifier("defmodule")  args=[alias]        → definition.class
+//   defprotocol target=identifier("defprotocol") args=[alias]      → definition.interface
+//   def        target=identifier("def")        args=[call target=identifier] → definition.function
+//   defp       target=identifier("defp")       args=[call target=identifier] → definition.function
+//   defmacro   target=identifier("defmacro")   args=[call target=identifier] → definition.function
+//   import/use/alias/require target=identifier args=[alias]        → import
+//   Module.func(args)  target=dot[left=alias, right=identifier]    → call
+//   func(args)         target=identifier                           → call
+export const ELIXIR_QUERIES = `
+; ── Modules (defmodule / defprotocol) ────────────────────────────────────────
+; Structural match: module names are always (alias) nodes, and defmodule/defprotocol
+; always have a (do_block) child.  No predicates needed — (alias) never appears in
+; the arguments of def/defp/alias/use/import/require.
+(call
+  (arguments (alias) @name)
+  (do_block)) @definition.class
+
+; ── Functions / macros (def / defp / defmacro / defmacrop / defguard) ────────
+; Form 1 — with arguments: def add(a, b) do ... end
+; The function name is the target of an inner (call) inside (arguments).
+(call
+  (arguments
+    (call
+      target: (identifier) @name))
+  (do_block)) @definition.function
+
+; Form 2 — zero-arg with do block: def greet do ... end
+; (arguments) contains exactly one bare (identifier) and a (do_block) follows.
+(call
+  (arguments
+    .
+    (identifier) @name
+    .)
+  (do_block)) @definition.function
+
+; Form 3 — inline keyword form: def greet, do: :hello
+; No (do_block) child; (arguments) has a bare (identifier) followed by (keywords).
+(call
+  (arguments
+    .
+    (identifier) @name
+    .
+    (keywords))) @definition.function
+
+; ── Imports / directives (import / use / alias / require) ───────────────────
+; Structural match: directives have (arguments) as their LAST named child (no
+; do_block follows).  The trailing anchor (.) at the call level enforces this,
+; preventing defmodule (which has a do_block sibling) from matching here.
+(call
+  target: (identifier)
+  .
+  (arguments
+    .
+    (alias) @import.source
+    .)
+  .) @import
+
+; ── Remote calls: Module.function(args)  (dot node target) ──────────────────
+(call
+  target: (dot
+    right: (identifier) @call.name)) @call
+
+; ── Local calls: function(args)  (bare identifier target) ───────────────────
+; Captures all local calls including keyword-like ones; call-processor filters
+; out non-call keywords using the provider's builtinNames set.
+(call
+  target: (identifier) @call.name) @call
+
+; ── Write access: state.count = value (binary_operator: left is a call with dot target) ──
+; NOTE: Heritage (use Module) is handled via callBasedHeritage in the provider,
+; not via tree-sitter captures, because the enclosing module name is needed.
+(binary_operator
+  left: (call
+    target: (dot
+      left: (_) @assignment.receiver
+      right: (identifier) @assignment.property))
+  operator: "="
+  right: (_)) @assignment
+`;
+
 import { SupportedLanguages } from 'gitnexus-shared';
 
 export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
@@ -1499,5 +1585,6 @@ export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
   [SupportedLanguages.Swift]: SWIFT_QUERIES,
   [SupportedLanguages.Dart]: DART_QUERIES,
   [SupportedLanguages.Vue]: TYPESCRIPT_QUERIES, // Vue <script> blocks are parsed as TypeScript
+  [SupportedLanguages.Elixir]: ELIXIR_QUERIES,
   [SupportedLanguages.Cobol]: '', // Standalone regex processor — no tree-sitter queries
 };
