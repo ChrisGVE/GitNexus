@@ -58,6 +58,9 @@ export const EXTENSIONS = [
   '.sc',
   // Zig
   '.zig',
+  // OCaml
+  '.ml',
+  '.mli',
 ];
 
 /**

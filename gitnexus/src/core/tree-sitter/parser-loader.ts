@@ -182,6 +182,17 @@ const SOURCES: Record<string, GrammarSource> = {
       'Zig parsing disabled: `tree-sitter-zig` is an optionalDependency ' +
       'and is not installed (or its native binding failed to build). ' +
       'Install `tree-sitter-zig` and rebuild native bindings to enable Zig analysis.',
+  [SupportedLanguages.OCaml]: {
+    load: () => {
+      const mod = _require('tree-sitter-ocaml');
+      return mod.ocaml;
+    },
+    optional: true,
+    severity: 'error',
+    unavailableNote:
+      'OCaml parsing disabled: `tree-sitter-ocaml` could not be loaded. ' +
+      'This package is in `dependencies` and prebuilds ship for all supported ' +
+      'platforms. Try `npm rebuild tree-sitter-ocaml` or reinstalling.',
   },
 };
 

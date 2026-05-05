@@ -299,3 +299,9 @@ export const zigExportChecker: ExportChecker = (node, _name) => {
   }
   return false;
 };
+/**
+ * OCaml: all top-level let bindings and module definitions are public by default.
+ * The .mli interface file controls visibility, but at the syntactic level in .ml
+ * files all bindings are accessible from other modules.
+ */
+export const ocamlExportChecker: ExportChecker = (_node, _name) => true;

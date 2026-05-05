@@ -44,6 +44,7 @@ export const LanguageClassifications: Readonly<Record<SupportedLanguages, Langua
     [SupportedLanguages.Scala]: 'experimental',
     [SupportedLanguages.Vue]: 'experimental',
     [SupportedLanguages.Zig]: 'experimental',
+    [SupportedLanguages.OCaml]: 'experimental',
     [SupportedLanguages.Cobol]: 'experimental',
   };
 

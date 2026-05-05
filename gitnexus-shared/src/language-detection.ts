@@ -46,6 +46,7 @@ const EXTENSION_MAP: Record<SupportedLanguages, readonly string[]> = {
   [SupportedLanguages.Scala]: ['.scala', '.sc'],
   [SupportedLanguages.Vue]: ['.vue'],
   [SupportedLanguages.Zig]: ['.zig'],
+  [SupportedLanguages.OCaml]: ['.ml', '.mli'],
   [SupportedLanguages.Cobol]: ['.cbl', '.cob', '.cpy', '.cobol'],
 } satisfies Record<SupportedLanguages, readonly string[]>; // Ensure exhaustiveness
 
@@ -108,6 +109,7 @@ const SYNTAX_MAP: Record<SupportedLanguages, string> = {
   [SupportedLanguages.Scala]: 'scala',
   [SupportedLanguages.Vue]: 'typescript',
   [SupportedLanguages.Zig]: 'zig',
+  [SupportedLanguages.OCaml]: 'ocaml',
   [SupportedLanguages.Cobol]: 'cobol',
 } satisfies Record<SupportedLanguages, string>; // Ensure exhaustiveness
 
