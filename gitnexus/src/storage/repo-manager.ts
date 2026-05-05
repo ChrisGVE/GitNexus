@@ -10,7 +10,7 @@ import fs from 'fs/promises';
 import { realpathSync } from 'fs';
 import path from 'path';
 import os from 'os';
-import { getInferredRepoName } from './git.js';
+import { getInferredRepoName, resolveRepoIdentityRoot } from './git.js';
 
 /**
  * Normalise a repo path for registry comparison across platforms
@@ -96,6 +96,7 @@ export interface RegistryEntry {
 }
 
 const GITNEXUS_DIR = '.gitnexus';
+const GITNEXUS_EXCLUDE_ENTRY = `${GITNEXUS_DIR}/`;
 
 // ─── Local Storage Helpers ─────────────────────────────────────────────
 
@@ -238,23 +239,45 @@ export const findRepo = async (startPath: string): Promise<IndexedRepo | null> =
 };
 
 /**
- * Add .gitnexus to .gitignore if not already present
+ * Keep generated index files ignored without modifying the user's root .gitignore.
  */
-export const addToGitignore = async (repoPath: string): Promise<void> => {
-  const gitignorePath = path.join(repoPath, '.gitignore');
+export const ensureGitNexusIgnored = async (repoPath: string): Promise<void> => {
+  const gitignorePath = path.join(getStoragePath(repoPath), '.gitignore');
+
+  await fs.mkdir(path.dirname(gitignorePath), { recursive: true });
+  await fs.writeFile(gitignorePath, '*\n', 'utf-8');
+
+  await ensureGitInfoExclude(repoPath);
+};
+
+const ensureGitInfoExclude = async (repoPath: string): Promise<void> => {
+  const gitDirPath = path.join(path.resolve(repoPath), '.git');
+  const excludePath = path.join(gitDirPath, 'info', 'exclude');
 
   try {
-    const content = await fs.readFile(gitignorePath, 'utf-8');
-    if (content.includes(GITNEXUS_DIR)) return;
-
-    const newContent = content.endsWith('\n')
-      ? `${content}${GITNEXUS_DIR}\n`
-      : `${content}\n${GITNEXUS_DIR}\n`;
-    await fs.writeFile(gitignorePath, newContent, 'utf-8');
+    const gitDir = await fs.stat(gitDirPath);
+    if (!gitDir.isDirectory()) return;
   } catch {
-    // .gitignore doesn't exist, create it
-    await fs.writeFile(gitignorePath, `${GITNEXUS_DIR}\n`, 'utf-8');
+    return;
   }
+
+  await fs.mkdir(path.dirname(excludePath), { recursive: true });
+
+  let content = '';
+  try {
+    content = await fs.readFile(excludePath, 'utf-8');
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT') throw err;
+  }
+
+  const excludes = content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('#'));
+  if (excludes.includes(GITNEXUS_DIR) || excludes.includes(GITNEXUS_EXCLUDE_ENTRY)) return;
+
+  const separator = content.length === 0 || content.endsWith('\n') ? '' : '\n';
+  await fs.writeFile(excludePath, `${content}${separator}${GITNEXUS_EXCLUDE_ENTRY}\n`, 'utf-8');
 };
 
 // ─── Global Registry (~/.gitnexus/registry.json) ───────────────────────
@@ -366,6 +389,17 @@ export class RegistryNameCollisionError extends Error {
 const hasCustomAlias = (entry: RegistryEntry, inferredName: string | null): boolean => {
   const resolved = path.resolve(entry.path);
   if (entry.name === path.basename(resolved)) return false;
+  // Canonical-root-derived names are not user aliases either (#1259):
+  // a worktree registered under the canonical repo's basename
+  // (e.g. `{name: 'repo', path: '/repo/wt-feature'}`) must re-register
+  // cleanly without firing the duplicate-name collision guard. Without
+  // this check `entry.name = 'repo'` !== `path.basename('/repo/wt-feature') = 'wt-feature'`,
+  // so the prior check returns true → `isPreservedAlias = true` → guard
+  // throws `RegistryNameCollisionError` against the also-registered
+  // canonical checkout entry. The Claude-Code per-task worktree workflow
+  // — analyze canonical, then analyze worktree, then re-analyze worktree
+  // — would break on the third call.
+  if (entry.name === path.basename(resolveRepoIdentityRoot(resolved))) return false;
   if (inferredName && entry.name === inferredName) return false;
   return true;
 };
@@ -447,7 +481,13 @@ export const registerRepo = async (
       name = existing.name;
       isPreservedAlias = true;
     } else {
-      name = inferred ?? path.basename(resolved);
+      // Canonical-root fallback: when `resolved` is a worktree root,
+      // derive the registry name from the canonical repo's basename, not
+      // the worktree slug — see #1259. `resolveRepoIdentityRoot` confines
+      // the collapse to canonical checkouts and linked worktree roots only,
+      // so `--skip-git` subdirs of unrelated parent git repos keep using
+      // their own basename (preserves the #1232/#1233 fix's intent).
+      name = inferred ?? path.basename(resolveRepoIdentityRoot(resolved));
     }
   }
 
