@@ -15,8 +15,8 @@ describe('isLanguageAvailable', () => {
   });
 
   it('returns false for fabricated language values', () => {
-    expect(isLanguageAvailable('erlang' as SupportedLanguages)).toBe(false);
-    expect(isLanguageAvailable('haskell' as SupportedLanguages)).toBe(false);
+    expect(isLanguageAvailable('brainfuck' as SupportedLanguages)).toBe(false);
+    expect(isLanguageAvailable('whitespace' as SupportedLanguages)).toBe(false);
   });
 
   it('returns true for Swift in the default install', () => {

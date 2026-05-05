@@ -134,7 +134,7 @@ describe('getLanguageFromFilename', () => {
   });
 
   describe('unsupported', () => {
-    it.each(['.r', '.zig', '.txt', '.md', '.json', '.yaml'])('returns null for %s files', (ext) => {
+    it.each(['.r', '.txt', '.md', '.json', '.yaml'])('returns null for %s files', (ext) => {
       expect(getLanguageFromFilename(`file${ext}`)).toBeNull();
     });
 

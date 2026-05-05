@@ -929,12 +929,12 @@ describe('parsing', () => {
       const rLang = getLanguageFromFilename('analysis.r');
       expect(rLang).toBeNull();
 
-      const zigLang = getLanguageFromFilename('main.zig');
-      expect(zigLang).toBeNull();
+      const fortranLang = getLanguageFromFilename('main.f90');
+      expect(fortranLang).toBeNull();
 
       // loadLanguage throws an explicit error for a language not in the grammar map.
       // Cast through unknown to simulate a caller passing an unrecognised language key.
-      await expect(loadLanguage('erlang' as unknown as SupportedLanguages)).rejects.toThrow(
+      await expect(loadLanguage('brainfuck' as unknown as SupportedLanguages)).rejects.toThrow(
         'Unsupported language',
       );
     });
