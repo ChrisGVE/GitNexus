@@ -1941,6 +1941,27 @@ export const PERL_QUERIES = `
 ; ── Variable declarations: my $var; my @arr; my %hash; our $var; ─────────────
 (variable_declaration
   variable: (_) @name) @definition.variable
+// SQL queries — verified against tree-sitter-sql@0.1.0 nodeTypeInfo.
+// The grammar is aspirational: the 0.1.0 package has no native binding,
+// so these queries are prepared for a future compatible release.
+// Node types used: create_function_statement, create_table_statement, function_call,
+// identifier (child of create_function_statement and create_table_statement).
+export const SQL_QUERIES = `
+; ── Stored functions / procedures ────────────────────────────────────────────
+; CREATE [OR REPLACE] FUNCTION name(...) ...
+; The grammar represents both as create_function_statement with identifier children.
+(create_function_statement
+  (identifier) @name) @definition.function
+
+; ── Tables ────────────────────────────────────────────────────────────────────
+; CREATE [TEMPORARY] TABLE [IF NOT EXISTS] name (...)
+(create_table_statement
+  (identifier) @name) @definition.class
+
+; ── Function calls ────────────────────────────────────────────────────────────
+; scalar_function(args), aggregate_function(args), CALL procedure(args)
+(function_call
+  function: (identifier) @call.name) @call
 `;
 
 import { SupportedLanguages } from 'gitnexus-shared';
@@ -1970,5 +1991,6 @@ export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
   [SupportedLanguages.Erlang]: ERLANG_QUERIES,
   [SupportedLanguages.Elixir]: ELIXIR_QUERIES,
   [SupportedLanguages.Perl]: PERL_QUERIES,
+  [SupportedLanguages.SQL]: SQL_QUERIES,
   [SupportedLanguages.Cobol]: '', // Standalone regex processor — no tree-sitter queries
 };

@@ -133,6 +133,18 @@ const SOURCES: Record<string, GrammarSource> = {
       `If the failure persists, file details at ${ISSUES_URL}/1242.`,
   },
 
+  // tree-sitter-sql@0.1.0 exports only grammar metadata (nodeTypeInfo) and
+  // has no native binding compatible with tree-sitter@0.21.x. The grammar is
+  // marked optional so the pipeline degrades gracefully if it cannot load.
+  [SupportedLanguages.SQL]: {
+    load: () => _require('tree-sitter-sql'),
+    optional: true,
+    unavailableNote:
+      'SQL parsing disabled: `tree-sitter-sql` (0.1.0) does not ship a native binding ' +
+      'compatible with tree-sitter@0.21.x. SQL files will be skipped by the tree-sitter ' +
+      'pipeline. Install a compatible SQL grammar to enable parsing.',
+  },
+
   // optionalDependencies — may be absent on platforms without prebuilds
   // or when users skip optional installs.
   [SupportedLanguages.Swift]: {

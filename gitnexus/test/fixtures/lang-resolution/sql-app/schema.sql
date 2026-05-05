@@ -1,0 +1,15 @@
+-- schema.sql: CREATE TABLE definitions
+
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE orders (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  total NUMERIC(10, 2),
+  placed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

@@ -29,6 +29,8 @@ export enum SupportedLanguages {
   Erlang = 'erlang',
   Elixir = 'elixir',
   Perl = 'perl',
+  /** Experimental generic SQL provider — tree-sitter grammar optional. */
+  SQL = 'sql',
   /** Standalone regex processor — no tree-sitter, no LanguageProvider. */
   Cobol = 'cobol',
 }

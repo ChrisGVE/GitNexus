@@ -34,6 +34,7 @@ import { erlangProvider } from './erlang.js';
 import { perlProvider } from './perl.js';
 import { cobolProvider } from './cobol.js';
 import { elixirProvider } from './elixir.js';
+import { sqlProvider } from './sql.js';
 
 export const providers = {
   [SupportedLanguages.JavaScript]: javascriptProvider,
@@ -60,6 +61,7 @@ export const providers = {
   [SupportedLanguages.Erlang]: erlangProvider,
   [SupportedLanguages.Elixir]: elixirProvider,
   [SupportedLanguages.Perl]: perlProvider,
+  [SupportedLanguages.SQL]: sqlProvider,
   [SupportedLanguages.Cobol]: cobolProvider,
 } satisfies Record<SupportedLanguages, LanguageProvider>;
 
