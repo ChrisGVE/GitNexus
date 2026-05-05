@@ -47,6 +47,10 @@ export const EXTENSIONS = [
   '.swift',
   // Ruby
   '.rb',
+  // Perl
+  '.pl',
+  '.pm',
+  '.t',
 ];
 
 /**

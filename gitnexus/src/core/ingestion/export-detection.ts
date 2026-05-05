@@ -246,3 +246,12 @@ export const rubyExportChecker: ExportChecker = (_node, _name) => true;
 
 /** Dart: public if no leading underscore (convention, same as Python). */
 export const dartExportChecker: ExportChecker = (_node, name) => !name.startsWith('_');
+
+/**
+ * Perl: all package-level subroutines are public by convention.
+ * Subroutines prefixed with `_` are conventionally private, but they
+ * remain accessible from outside the package (Perl has no access control).
+ * We treat everything as exported since callers in other packages can always
+ * call any subroutine.
+ */
+export const perlExportChecker: ExportChecker = (_node, _name) => true;
