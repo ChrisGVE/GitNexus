@@ -47,6 +47,8 @@ export const EXTENSIONS = [
   '.swift',
   // Ruby
   '.rb',
+  // Zig
+  '.zig',
 ];
 
 /**

@@ -1481,6 +1481,52 @@ export const DART_QUERIES = `
       (type_identifier) @heritage.trait))) @heritage
 `;
 
+// Zig queries — verified against tree-sitter-zig 0.2.0 node types
+// Key node types:
+//   function_declaration  — name: (identifier), parameters, return, body
+//   assignment_statement  — name: (identifier), type?, expression  (const/var decls)
+//   build_in_call_expr    — function: (identifier), arguments  (@import, @intCast, …)
+//   call_expression       — function: (identifier), arguments
+//   struct_expression     — struct body containing field_declaration and function_declaration
+//   test_expression       — test_name: (string_literal), body
+//   field_declaration     — name: (field_identifier), type
+//   visibility_modifier   — 'pub'
+export const ZIG_QUERIES = `
+; ── Functions ────────────────────────────────────────────────────────────────
+(function_declaration name: (identifier) @name) @definition.function
+
+; ── Top-level const/var declarations (structs, type aliases, constants) ──────
+(assignment_statement name: (identifier) @name) @definition.const
+
+; ── Struct type bodies (the RHS of "const Foo = struct { ... }") ─────────────
+; Named via the enclosing assignment_statement — captured by @definition.const above.
+
+; ── Test declarations ─────────────────────────────────────────────────────────
+(test_expression test_name: (string_literal) @name) @definition.test
+
+; ── Struct field declarations ─────────────────────────────────────────────────
+(struct_expression
+  (field_declaration name: (field_identifier) @name) @definition.property)
+
+; ── Imports via @import("...") ────────────────────────────────────────────────
+(assignment_statement
+  expression: (build_in_call_expr
+    function: (identifier) @_fn
+    arguments: (arguments (string_literal) @import.source))
+  (#eq? @_fn "import")) @import
+
+; ── Regular function calls ────────────────────────────────────────────────────
+(call_expression function: (identifier) @call.name) @call
+
+; ── Built-in calls (@intCast, @as, etc.) ──────────────────────────────────────
+(build_in_call_expr function: (identifier) @call.name) @call
+
+; ── Method/field calls: foo.bar() ─────────────────────────────────────────────
+(call_expression
+  function: (field_expression
+    field: (field_identifier) @call.name)) @call
+`;
+
 import { SupportedLanguages } from 'gitnexus-shared';
 
 export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
@@ -1499,5 +1545,6 @@ export const LANGUAGE_QUERIES: Record<SupportedLanguages, string> = {
   [SupportedLanguages.Swift]: SWIFT_QUERIES,
   [SupportedLanguages.Dart]: DART_QUERIES,
   [SupportedLanguages.Vue]: TYPESCRIPT_QUERIES, // Vue <script> blocks are parsed as TypeScript
+  [SupportedLanguages.Zig]: ZIG_QUERIES,
   [SupportedLanguages.Cobol]: '', // Standalone regex processor — no tree-sitter queries
 };

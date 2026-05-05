@@ -160,6 +160,14 @@ const SOURCES: Record<string, GrammarSource> = {
       'Kotlin parsing disabled: `tree-sitter-kotlin` is an optionalDependency ' +
       'and is not installed (or its native binding failed to build).',
   },
+  [SupportedLanguages.Zig]: {
+    load: () => _require('tree-sitter-zig'),
+    optional: true,
+    unavailableNote:
+      'Zig parsing disabled: `tree-sitter-zig` is an optionalDependency ' +
+      'and is not installed (or its native binding failed to build). ' +
+      'Install `tree-sitter-zig` and rebuild native bindings to enable Zig analysis.',
+  },
 };
 
 type LoadResult =

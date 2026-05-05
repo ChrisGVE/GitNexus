@@ -246,3 +246,28 @@ export const rubyExportChecker: ExportChecker = (_node, _name) => true;
 
 /** Dart: public if no leading underscore (convention, same as Python). */
 export const dartExportChecker: ExportChecker = (_node, name) => !name.startsWith('_');
+
+/**
+ * Zig: a symbol is exported when it has a `pub` visibility_modifier.
+ * Walk up to the declaration node and check its direct children.
+ * All definitions without `pub` are private (file-scoped).
+ */
+export const zigExportChecker: ExportChecker = (node, _name) => {
+  let current: SyntaxNode | null = node;
+  while (current) {
+    for (let i = 0; i < current.childCount; i++) {
+      const child = current.child(i);
+      if (child?.type === 'visibility_modifier' && child.text === 'pub') return true;
+    }
+    // Stop at declaration boundaries to avoid false positives from outer scopes
+    if (
+      current.type === 'function_declaration' ||
+      current.type === 'assignment_statement' ||
+      current.type === 'source_file'
+    ) {
+      break;
+    }
+    current = current.parent;
+  }
+  return false;
+};
