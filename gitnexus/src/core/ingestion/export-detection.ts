@@ -246,3 +246,11 @@ export const rubyExportChecker: ExportChecker = (_node, _name) => true;
 
 /** Dart: public if no leading underscore (convention, same as Python). */
 export const dartExportChecker: ExportChecker = (_node, name) => !name.startsWith('_');
+
+/**
+ * Haskell: all top-level bindings are publicly visible by default.
+ * The module export list (explicitly declared exports) controls what is
+ * exported, but GitNexus treats all definitions as public for graph
+ * construction purposes (conservative — matches Kotlin/Go approach).
+ */
+export const haskellExportChecker: ExportChecker = (_node, _name) => true;

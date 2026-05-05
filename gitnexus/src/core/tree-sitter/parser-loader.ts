@@ -160,6 +160,10 @@ const SOURCES: Record<string, GrammarSource> = {
       'Kotlin parsing disabled: `tree-sitter-kotlin` is an optionalDependency ' +
       'and is not installed (or its native binding failed to build).',
   },
+  [SupportedLanguages.Haskell]: {
+    load: () => _require('tree-sitter-haskell'),
+    unavailableNote: 'Haskell parsing requires `tree-sitter-haskell`.',
+  },
 };
 
 type LoadResult =
