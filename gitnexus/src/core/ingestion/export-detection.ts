@@ -312,3 +312,37 @@ export const ocamlExportChecker: ExportChecker = (_node, _name) => true;
  * construction purposes (conservative — matches Kotlin/Go approach).
  */
 export const haskellExportChecker: ExportChecker = (_node, _name) => true;
+/**
+ * Erlang: a function is exported if it appears in an `-export([name/arity]).`
+ * attribute.  Since we cannot resolve arity from the name alone at this point,
+ * we walk the ancestor tree looking for an `export_attribute` node that
+ * contains an `export_entry` whose atom text matches `name`.
+ *
+ * As a safe fallback, top-level functions whose module has no -export attribute
+ * at all are treated as non-exported.  Functions listed in -export are public.
+ */
+export const erlangExportChecker: ExportChecker = (node, name) => {
+  // Walk up to find the source_file root, then scan all export_attribute nodes.
+  let root: SyntaxNode | null = node;
+  while (root?.parent) root = root.parent;
+  if (!root) return false;
+
+  for (let i = 0; i < root.childCount; i++) {
+    const child = root.child(i);
+    if (child?.type !== 'export_attribute') continue;
+    for (let j = 0; j < child.namedChildCount; j++) {
+      const exportList = child.namedChild(j);
+      if (exportList?.type !== 'export_list') continue;
+      for (let k = 0; k < exportList.namedChildCount; k++) {
+        const entry = exportList.namedChild(k);
+        if (entry?.type !== 'export_entry') continue;
+        // First atom child of export_entry is the function name
+        for (let m = 0; m < entry.namedChildCount; m++) {
+          const atom = entry.namedChild(m);
+          if (atom?.type === 'atom' && atom.text === name) return true;
+        }
+      }
+    }
+  }
+  return false;
+};

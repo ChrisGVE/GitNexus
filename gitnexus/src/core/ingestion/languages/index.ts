@@ -30,6 +30,7 @@ import { scalaProvider } from './scala.js';
 import { zigProvider } from './zig.js';
 import { ocamlProvider } from './ocaml.js';
 import { haskellProvider } from './haskell.js';
+import { erlangProvider } from './erlang.js';
 import { cobolProvider } from './cobol.js';
 
 export const providers = {
@@ -54,6 +55,7 @@ export const providers = {
   [SupportedLanguages.Zig]: zigProvider,
   [SupportedLanguages.OCaml]: ocamlProvider,
   [SupportedLanguages.Haskell]: haskellProvider,
+  [SupportedLanguages.Erlang]: erlangProvider,
   [SupportedLanguages.Cobol]: cobolProvider,
 } satisfies Record<SupportedLanguages, LanguageProvider>;
 
