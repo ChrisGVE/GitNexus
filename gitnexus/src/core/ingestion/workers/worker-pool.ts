@@ -187,6 +187,7 @@ export const createWorkerPool = (
   const size = poolSize ?? Math.min(8, Math.max(1, os.cpus().length - 1));
   const poolOptions = resolveWorkerPoolOptions(options);
   const workers: Worker[] = [];
+  const orphanedWorkers: Worker[] = [];
   let poolBroken = false;
   let poolFailure: Error | undefined;
 
@@ -232,8 +233,12 @@ export const createWorkerPool = (
       };
 
       const replaceWorker = async (workerIndex: number) => {
-        const worker = workers[workerIndex];
-        await worker?.terminate().catch(() => undefined);
+        const oldWorker = workers[workerIndex];
+        if (oldWorker) {
+          oldWorker.removeAllListeners();
+          oldWorker.on('error', () => {});
+          orphanedWorkers.push(oldWorker);
+        }
         if (stopped) return;
         const replacement = new Worker(workerUrl);
         try {
@@ -256,6 +261,8 @@ export const createWorkerPool = (
         poolFailure = err;
         if (stopped) return;
         stopped = true;
+        for (const w of orphanedWorkers) w.unref();
+        orphanedWorkers.length = 0;
         await Promise.all(workers.map((worker) => worker.terminate().catch(() => undefined)));
         reject(err);
       };
@@ -463,8 +470,10 @@ export const createWorkerPool = (
   };
 
   const terminate = async (): Promise<void> => {
-    await Promise.all(workers.map((w) => w.terminate()));
+    await Promise.all(workers.map((w) => w.terminate().catch(() => undefined)));
     workers.length = 0;
+    for (const w of orphanedWorkers) w.unref();
+    orphanedWorkers.length = 0;
   };
 
   return { dispatch, terminate, size };
