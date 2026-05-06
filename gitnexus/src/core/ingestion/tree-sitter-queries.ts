@@ -1683,17 +1683,17 @@ export const OCAML_QUERIES = `
 
 ; ── Open statements (imports) ────────────────────────────────────────────────
 (open_module
-  module: (_) @import.source) @import
+  (module_path) @import.source) @import
 
 ; ── Function application calls ───────────────────────────────────────────────
-; Direct application: f arg1 arg2  →  application_expression.function = value_path
+; Direct application: f arg1 arg2
 (application_expression
-  function: (value_path
+  (value_path
     (value_name) @call.name)) @call
 
-; Qualified application: Module.f arg  →  application_expression.function = value_path with module_path
+; Qualified application: Module.f arg
 (application_expression
-  function: (value_path
+  (value_path
     (module_path)
     (value_name) @call.name)) @call
 `;
