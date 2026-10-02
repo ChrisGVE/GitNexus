@@ -960,6 +960,77 @@ describe('Codex hooks (installClaudeSchemaHooks)', () => {
     expect(await fs.readFile(hooksJsonPath(), 'utf-8')).toBe(corrupt);
     expect(logLines()).toContain('Codex hooks: hooks.json is corrupt');
   });
+
+  describe('with CODEX_HOME set', () => {
+    let codexDir: string;
+
+    beforeEach(async () => {
+      // Codex reads only $CODEX_HOME, so ~/.codex must not exist for these
+      // cases: anything written there would be invisible to Codex.
+      await fs.rm(path.join(tempHome, '.codex'), { recursive: true, force: true });
+      codexDir = path.join(tempHome, 'relocated', 'codex');
+      await fs.mkdir(codexDir, { recursive: true });
+      process.env.CODEX_HOME = codexDir;
+    });
+
+    afterEach(() => {
+      // vitest.config.ts pins it to '' so a developer shell's value never leaks in.
+      process.env.CODEX_HOME = '';
+    });
+
+    it('registers hooks in $CODEX_HOME/hooks.json and installs the adapter there', async () => {
+      const { setupCommand } = await import('../../src/cli/setup.js');
+      await setupCommand();
+
+      const hooks = JSON.parse(await fs.readFile(path.join(codexDir, 'hooks.json'), 'utf-8')).hooks;
+      expect(hooks.PreToolUse[0].hooks[0].command).toContain('gitnexus-hook');
+      await expect(
+        fs.access(path.join(codexDir, 'hooks', 'gitnexus', 'gitnexus-hook.cjs')),
+      ).resolves.toBeUndefined();
+      await expect(fs.access(path.join(tempHome, '.codex'))).rejects.toThrow();
+    });
+
+    it('falls back to $CODEX_HOME/config.toml when the codex binary is missing', async () => {
+      execFileMock.mockImplementation((...args: unknown[]) => {
+        const callback = args.at(-1);
+        if (typeof callback === 'function') callback(new Error('codex not found'), '', '');
+      });
+
+      const { setupCommand } = await import('../../src/cli/setup.js');
+      await setupCommand();
+
+      const toml = await fs.readFile(path.join(codexDir, 'config.toml'), 'utf-8');
+      expect(toml).toContain('[mcp_servers.gitnexus]');
+      expect(logLines()).toContain(path.join(codexDir, 'config.toml'));
+      await expect(fs.access(path.join(tempHome, '.codex'))).rejects.toThrow();
+    });
+
+    it('still installs Codex skills to ~/.agents/skills', async () => {
+      const { setupCommand } = await import('../../src/cli/setup.js');
+      await setupCommand();
+
+      const skills = await fs.readdir(path.join(tempHome, '.agents', 'skills'));
+      expect(skills.length).toBeGreaterThan(0);
+    });
+
+    it('skips Codex when $CODEX_HOME does not exist, even if ~/.codex does', async () => {
+      await fs.rm(codexDir, { recursive: true, force: true });
+      await fs.mkdir(path.join(tempHome, '.codex'), { recursive: true });
+
+      const { setupCommand } = await import('../../src/cli/setup.js');
+      await setupCommand();
+
+      expect(execFileMock).not.toHaveBeenCalledWith(
+        'codex',
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+      );
+      await expect(fs.access(codexDir)).rejects.toThrow();
+      expect(await fs.readdir(path.join(tempHome, '.codex'))).toEqual([]);
+      await expect(fs.access(path.join(tempHome, '.agents'))).rejects.toThrow();
+    });
+  });
 });
 
 describe('setup — non-ENOENT read/stat failures are surfaced, not masked', () => {

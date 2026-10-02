@@ -243,6 +243,8 @@ When a repo contains an `.agents/` directory, the standard and generated skills 
 
 > **Relocated Claude Code config:** if `CLAUDE_CONFIG_DIR` is set, `gitnexus setup` and `gitnexus uninstall` use it the way Claude Code does — the MCP entry goes to `$CLAUDE_CONFIG_DIR/.claude.json` and skills, hooks and `settings.json` under `$CLAUDE_CONFIG_DIR` — instead of `~/.claude.json` and `~/.claude/`. Run them from a shell where the variable has the value Claude Code sees.
 
+> **Relocated Codex config:** if `CODEX_HOME` is set, `gitnexus setup` and `gitnexus uninstall` put the MCP entry in `$CODEX_HOME/config.toml` and the hooks in `$CODEX_HOME/hooks.json` instead of under `~/.codex/`. Skills stay in `~/.agents/skills`, where Codex reads them whatever `CODEX_HOME` says. If you keep several Codex homes, run setup once per home, each time from a shell where `CODEX_HOME` names it.
+
 > **Full** means MCP tools + agent skills + hooks that enrich searches with graph context. **Claude Code** and **Codex** go deepest: their PreToolUse hooks enrich the search before it runs, and their PostToolUse hooks also detect a stale index after commits and prompt the agent to reindex. **Cursor**, **Antigravity**, and **Factory** augment from a post-tool hook only, so they enrich the result rather than the query and do not carry the stale-index hint.
 
 <a id="fn-antigravity-hooks"></a>

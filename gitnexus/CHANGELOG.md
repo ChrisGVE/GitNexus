@@ -7,6 +7,7 @@ All notable changes to GitNexus will be documented in this file.
 ### Fixed
 
 - **`setup` / `uninstall` honour `CLAUDE_CONFIG_DIR`** — with the variable set, Claude Code reads its MCP servers from `$CLAUDE_CONFIG_DIR/.claude.json` and its settings, skills and hooks from `$CLAUDE_CONFIG_DIR`, but GitNexus wrote to `~/.claude.json` and `~/.claude/`, so the install was invisible to Claude Code (or skipped as "not installed" when `~/.claude` did not exist). Both commands now resolve the same root Claude Code does; with the variable unset nothing changes
+- **`setup` / `uninstall` honour `CODEX_HOME`** — Codex keeps `config.toml` and `hooks.json` in `$CODEX_HOME`, but GitNexus gated on and wrote to `~/.codex/`, so with the variable set the hooks (and, without the `codex` binary on PATH, the MCP entry) went where Codex never reads them, or Codex was skipped as "not installed". Both commands now use `$CODEX_HOME`; skills stay in `~/.agents/skills`, and with the variable unset nothing changes
 
 ### Changed
 

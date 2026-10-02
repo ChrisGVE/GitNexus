@@ -16,11 +16,12 @@ export default defineConfig({
     // respawn behavior itself delete GITNEXUS_MEMORY in their own setup.
     // Tests assert the English CLI contract unless a case opts into another
     // language explicitly. Do not inherit a developer shell's CLI locale.
-    // CLAUDE_CONFIG_DIR relocates Claude Code's config root, and setup/uninstall
-    // honour it: inheriting a developer's value would point setup tests that
-    // sandbox HOME at that developer's real config. Empty means unset; cases
-    // that exercise the relocation set it themselves.
-    env: { GITNEXUS_MEMORY: 'off', GITNEXUS_LANG: 'en', CLAUDE_CONFIG_DIR: '' },
+    // CLAUDE_CONFIG_DIR and CODEX_HOME relocate Claude Code's and Codex's config
+    // roots, and setup/uninstall honour them: inheriting a developer's value
+    // would point setup tests that sandbox HOME at that developer's real
+    // config. Empty means unset; cases that exercise a relocation set it
+    // themselves.
+    env: { GITNEXUS_MEMORY: 'off', GITNEXUS_LANG: 'en', CLAUDE_CONFIG_DIR: '', CODEX_HOME: '' },
     // N-API destructors can crash worker forks on macOS during process exit.
     // This is independent of the QueryResult lifetime fix in @ladybugdb/core 0.15.2 —
     // it's a vitest forks + native addon interaction where destructors run in

@@ -56,7 +56,7 @@ export interface McpJsoncTarget {
 export interface CodexMcpTarget {
   id: 'codex';
   label: string;
-  /** Absolute path to ~/.codex/config.toml. */
+  /** Absolute path to config.toml under Codex's root (`$CODEX_HOME` or ~/.codex). */
   configFile: string;
   /** The TOML table header (without brackets) setup writes / uninstall strips. */
   tomlSection: string;
@@ -122,18 +122,33 @@ export function claudeConfigPaths(
 }
 
 /**
+ * Resolve Codex's config root (`CODEX_HOME`, default `~/.codex`), which holds
+ * config.toml and hooks.json. User skills are not under it: Codex reads them
+ * from `~/.agents/skills` whatever `CODEX_HOME` says. An empty value counts as
+ * unset; a relative one is resolved against the working directory.
+ */
+export function codexHome(
+  home: string = os.homedir(),
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  const relocated = env.CODEX_HOME;
+  return relocated ? path.resolve(relocated) : path.join(home, '.codex');
+}
+
+/**
  * Resolve all editor targets for the given home directory and environment.
  * Defaults to `os.homedir()` and `process.env`; call sites pass them through so
  * tests can point HOME at a temp dir. Paths are computed at call time (not
  * module load) so a test setting `process.env.HOME` before invoking sees the
  * right locations. The environment carries per-editor config-dir overrides
- * (`CLAUDE_CONFIG_DIR`).
+ * (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`).
  */
 export function getEditorTargets(
   home: string = os.homedir(),
   env: NodeJS.ProcessEnv = process.env,
 ): EditorTargets {
   const claude = claudeConfigPaths(home, env);
+  const codexDir = codexHome(home, env);
 
   const mcpJsonc: McpJsoncTarget[] = [
     {
@@ -201,7 +216,7 @@ export function getEditorTargets(
   const codex: CodexMcpTarget = {
     id: 'codex',
     label: 'Codex',
-    configFile: path.join(home, '.codex', 'config.toml'),
+    configFile: path.join(codexDir, 'config.toml'),
     tomlSection: 'mcp_servers.gitnexus',
   };
 
@@ -218,7 +233,7 @@ export function getEditorTargets(
     // Qoder skills live at ~/.qoder/skills/{name}/SKILL.md
     // (https://docs.qoder.com/extensions/skills).
     { id: 'qoder', label: 'Qoder', dir: path.join(home, '.qoder', 'skills') },
-    // Codex reads skills from ~/.agents/skills (not ~/.codex).
+    // Codex reads skills from ~/.agents/skills (not ~/.codex, and not $CODEX_HOME).
     { id: 'codex', label: 'Codex', dir: path.join(home, '.agents', 'skills') },
     // Factory Droid reads user-scope skills from ~/.factory/skills/{name}/SKILL.md
     // (https://docs.factory.ai/cli/configuration/skills).
@@ -240,10 +255,10 @@ export function getEditorTargets(
       // Codex hooks use Claude Code's exact {hooks: {Event: [...]}} JSON shape
       // and hookSpecificOutput response contract, in a dedicated hooks.json
       // (https://developers.openai.com/codex/hooks).
-      settingsFile: path.join(home, '.codex', 'hooks.json'),
+      settingsFile: path.join(codexDir, 'hooks.json'),
       events: ['PreToolUse', 'PostToolUse'],
       needle: 'gitnexus-hook',
-      scriptDir: path.join(home, '.codex', 'hooks', 'gitnexus'),
+      scriptDir: path.join(codexDir, 'hooks', 'gitnexus'),
     },
     {
       id: 'antigravity',

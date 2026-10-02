@@ -17,6 +17,7 @@ import { packageVersion } from '../core/package-version.js';
 import { getGlobalDir } from '../storage/repo-manager.js';
 import {
   claudeConfigPaths,
+  codexHome,
   getEditorTargets,
   mcpTarget,
   skillTarget,
@@ -494,7 +495,7 @@ export async function copyHookHelpers(
  *
  * Claude Code registers hooks in ~/.claude/settings.json (under $CLAUDE_CONFIG_DIR when
  * set); Codex uses a
- * dedicated ~/.codex/hooks.json with the identical {hooks: {Event: [...]}}
+ * dedicated hooks.json in $CODEX_HOME (default ~/.codex) with the identical {hooks: {Event: [...]}}
  * JSON shape, stdin payload, and hookSpecificOutput response contract
  * (https://developers.openai.com/codex/hooks), so both runtimes share this
  * installer and the same bundled adapter script. Merges hook config without
@@ -508,7 +509,8 @@ async function installClaudeSchemaHooks(
   const settingsPath = hookCfg.settingsFile;
   const label = `${hookCfg.label} hooks`;
 
-  // Gate on the editor's own config dir (~/.claude, ~/.codex) existing.
+  // Gate on the editor's own config dir ($CLAUDE_CONFIG_DIR or ~/.claude,
+  // $CODEX_HOME or ~/.codex) existing.
   if (!(await dirExists(path.dirname(settingsPath)))) return;
 
   // Source hooks bundled within the gitnexus package (hooks/claude/)
@@ -1010,7 +1012,7 @@ async function installDroidSkills(result: SetupResult): Promise<void> {
 }
 
 /**
- * Build a TOML section for Codex MCP config (~/.codex/config.toml).
+ * Build a TOML section for Codex MCP config ($CODEX_HOME/config.toml, default ~/.codex).
  */
 function getCodexMcpTomlSection(): string {
   const entry = getMcpEntry();
@@ -1046,8 +1048,9 @@ async function upsertCodexConfigToml(configPath: string): Promise<void> {
 }
 
 async function setupCodex(result: SetupResult): Promise<void> {
-  const codexDir = path.join(os.homedir(), '.codex');
-  if (!(await dirExists(codexDir))) {
+  // Gate on the root Codex actually reads ($CODEX_HOME or ~/.codex). The
+  // `codex mcp add` child inherits the environment, so it writes there too.
+  if (!(await dirExists(codexHome()))) {
     result.skipped.push('Codex (not installed)');
     return;
   }
@@ -1067,7 +1070,7 @@ async function setupCodex(result: SetupResult): Promise<void> {
   try {
     const configPath = getEditorTargets().codex.configFile;
     await upsertCodexConfigToml(configPath);
-    result.configured.push('Codex (MCP added to ~/.codex/config.toml)');
+    result.configured.push(`Codex (MCP added to ${configPath})`);
   } catch (err: any) {
     result.errors.push(`Codex: ${err.message}`);
   }
@@ -1266,8 +1269,7 @@ async function installOpenCodeSkills(result: SetupResult): Promise<void> {
  * Install global Codex skills to ~/.agents/skills/gitnexus/
  */
 async function installCodexSkills(result: SetupResult): Promise<void> {
-  const codexDir = path.join(os.homedir(), '.codex');
-  if (!(await dirExists(codexDir))) return;
+  if (!(await dirExists(codexHome()))) return;
 
   const skillsDir = skillTarget('codex').dir;
   try {

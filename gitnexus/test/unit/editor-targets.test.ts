@@ -2,6 +2,7 @@ import path from 'path';
 import { describe, expect, it } from 'vitest';
 import {
   claudeConfigPaths,
+  codexHome,
   getEditorTargets,
   hookTarget,
   mcpTarget,
@@ -57,5 +58,49 @@ describe('getEditorTargets — Claude Code under CLAUDE_CONFIG_DIR', () => {
     expect(others(relocatedTargets.skills)).toEqual(others(defaultTargets.skills));
     expect(others(relocatedTargets.hooks)).toEqual(others(defaultTargets.hooks));
     expect(relocatedTargets.codex).toEqual(defaultTargets.codex);
+  });
+});
+
+describe('codexHome', () => {
+  it('defaults to ~/.codex', () => {
+    expect(codexHome(HOME, {})).toBe(path.join(HOME, '.codex'));
+  });
+
+  it('uses CODEX_HOME when it is set', () => {
+    const relocated = path.resolve('/cfg/codex');
+    expect(codexHome(HOME, { CODEX_HOME: relocated })).toBe(relocated);
+  });
+
+  it('treats an empty CODEX_HOME as unset', () => {
+    expect(codexHome(HOME, { CODEX_HOME: '' })).toBe(path.join(HOME, '.codex'));
+  });
+
+  it('resolves a relative CODEX_HOME against the working directory', () => {
+    expect(codexHome(HOME, { CODEX_HOME: 'rel/codex' })).toBe(path.resolve('rel/codex'));
+  });
+});
+
+describe('getEditorTargets — Codex under CODEX_HOME', () => {
+  const relocated = path.resolve('/cfg/codex');
+  const env = { CODEX_HOME: relocated };
+
+  it('routes config.toml, hooks.json and hook scripts to the relocated root', () => {
+    expect(getEditorTargets(HOME, env).codex.configFile).toBe(path.join(relocated, 'config.toml'));
+    const hooks = hookTarget('codex', HOME, env);
+    expect(hooks.settingsFile).toBe(path.join(relocated, 'hooks.json'));
+    expect(hooks.scriptDir).toBe(path.join(relocated, 'hooks', 'gitnexus'));
+  });
+
+  it('keeps Codex skills in ~/.agents/skills, which CODEX_HOME does not move', () => {
+    expect(skillTarget('codex', HOME, env).dir).toBe(path.join(HOME, '.agents', 'skills'));
+  });
+
+  it('leaves every other editor rooted at HOME', () => {
+    const relocatedTargets = getEditorTargets(HOME, env);
+    const defaultTargets = getEditorTargets(HOME, {});
+    const others = <T extends { id: string }>(list: T[]) => list.filter((t) => t.id !== 'codex');
+    expect(relocatedTargets.mcpJsonc).toEqual(defaultTargets.mcpJsonc);
+    expect(relocatedTargets.skills).toEqual(defaultTargets.skills);
+    expect(others(relocatedTargets.hooks)).toEqual(others(defaultTargets.hooks));
   });
 });

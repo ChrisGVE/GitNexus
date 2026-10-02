@@ -254,6 +254,57 @@ describe('uninstallCommand', () => {
     expect(result).toContain('command = "other"');
   });
 
+  it('removes the MCP section, hooks and adapter from $CODEX_HOME when it is set', async () => {
+    const codexDir = path.join(tempHome, 'relocated', 'codex');
+    process.env.CODEX_HOME = codexDir;
+    try {
+      await fs.mkdir(codexDir, { recursive: true });
+      const configPath = path.join(codexDir, 'config.toml');
+      await fs.writeFile(
+        configPath,
+        [
+          '[mcp_servers.other]',
+          'command = "other"',
+          '',
+          '[mcp_servers.gitnexus]',
+          'command = "gitnexus"',
+          '',
+        ].join('\n'),
+        'utf-8',
+      );
+      await fs.writeFile(
+        path.join(codexDir, 'hooks.json'),
+        JSON.stringify({
+          hooks: {
+            PreToolUse: [
+              {
+                matcher: 'Bash',
+                hooks: [{ type: 'command', command: 'node ".../gitnexus-hook.cjs"' }],
+              },
+            ],
+          },
+        }),
+        'utf-8',
+      );
+      const hookDir = path.join(codexDir, 'hooks', 'gitnexus');
+      await fs.mkdir(hookDir, { recursive: true });
+      await fs.writeFile(path.join(hookDir, 'gitnexus-hook.cjs'), '// hook', 'utf-8');
+
+      const uninstallCommand = await importUninstall();
+      await uninstallCommand({ force: true });
+
+      const toml = await fs.readFile(configPath, 'utf-8');
+      expect(toml).not.toContain('[mcp_servers.gitnexus]');
+      expect(toml).toContain('[mcp_servers.other]');
+      const hooks = JSON.parse(await fs.readFile(path.join(codexDir, 'hooks.json'), 'utf-8'));
+      expect(hooks.hooks.PreToolUse).toHaveLength(0);
+      await expect(fs.access(hookDir)).rejects.toThrow();
+    } finally {
+      // vitest.config.ts pins it to '' so a developer shell's value never leaks in.
+      process.env.CODEX_HOME = '';
+    }
+  });
+
   it('leaves a corrupt JSON config untouched', async () => {
     const claudeJson = path.join(tempHome, '.claude.json');
     const corrupt = '{ not valid json !!!';
